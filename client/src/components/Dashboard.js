@@ -18,6 +18,9 @@ import { DashboardLayout, ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import { Account } from '@toolpad/core/Account';
 import { DemoProvider, useDemoRouter } from '@toolpad/core/internal';
 import { Button } from '@mui/material';
+import { useEffect,useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const NAVIGATION = [
   {
@@ -116,8 +119,8 @@ function CustomAppTitle() {
   return (
     <Stack direction="row" alignItems="center" spacing={2}>
       <CloudCircleIcon fontSize="large" color="primary" />
-      <Typography variant="h6">My App</Typography>
-      <Chip size="small" label="BETA" color="info" />
+      <Typography variant="h6">MY APP</Typography>
+      <Chip size="small" label="LIGHTIC" color="info" />
       <Tooltip title="Connected to production">
         <CheckCircleIcon color="success" fontSize="small" />
       </Tooltip>
@@ -126,6 +129,31 @@ function CustomAppTitle() {
 }
 
 function DashboardLayoutSlots(props) {
+    const navigation = useNavigate();
+    const [profileData, setProfileData] = useState({});
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            async function fetchProfile() {
+                try {
+                    const response = await axios.get('http://localhost:5000/api/users/profile', {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+                    if (response.status === 200) {
+                        setProfileData(response.data);
+                    } else {
+                        console.error('Failed to fetch profile:', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                    navigation('/login'); // Redirect to login if there's an error
+                }
+            }
+            fetchProfile();
+        }
+    }, []);
   const { window, onLogout } = props;
 
   const router = useDemoRouter('/dashboard');
@@ -147,6 +175,11 @@ function DashboardLayoutSlots(props) {
             sidebarFooter: SidebarFooter,
           }}
         >
+            {profileData.role ? (
+                <p>Welcome {profileData.role ? profileData.role : 'not found '} </p>
+            ) : (
+                <p>Loading profile...</p>
+            )}
           <DemoPageContent pathname={router.pathname} />
         </DashboardLayout>
       </AppProvider>
