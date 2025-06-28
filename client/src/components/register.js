@@ -13,7 +13,11 @@ function Register({ onRegister }) {
     fullName: '',
     email: '',
     password: '',
+    address: '',
+    phoneNumber: '',
+    profileImage: '', // ممكن لاحقاً نضيف input type="file"
   });
+
   const [msg, setMsg] = useState('');
 
   const handleChange = (e) => {
@@ -71,6 +75,23 @@ function Register({ onRegister }) {
           onChange={handleChange}
           margin="normal"
         />
+        <TextField
+          fullWidth
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          margin="normal"
+        />
+        <TextField
+          fullWidth
+          label="Phone Number"
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+          margin="normal"
+        />
+        {/* profileImage ممكن نضيفه لاحقًا كـ file upload */}
         {msg && <Typography color="error" mt={1}>{msg}</Typography>}
         <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
           Register

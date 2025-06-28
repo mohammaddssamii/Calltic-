@@ -21,6 +21,8 @@ import { Button } from '@mui/material';
 import { useEffect,useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import ProfilePage from './profilePage';
 
 const NAVIGATION = [
   {
@@ -36,6 +38,11 @@ const NAVIGATION = [
     segment: 'orders',
     title: 'Orders',
     icon: <ShoppingCartIcon />,
+  },
+  {
+    segment: 'profile',
+    title: 'Profile',
+    icon: <AccountBoxIcon />,
   },
 ];
 
@@ -55,7 +62,7 @@ const demoTheme = createTheme({
   },
 });
 
-function DemoPageContent({ pathname }) {
+function DemoPageContent({ pathname, profileData }) {
   return (
     <Box
       sx={{
@@ -66,8 +73,12 @@ function DemoPageContent({ pathname }) {
         textAlign: 'center',
       }}
     >
-      <Typography variant="h4" gutterBottom>Welcome to the Dashboard</Typography>
+      {pathname === '/profile' && (
+        <ProfilePage profileData={profileData} />
+      )}
+    
       <Typography variant="body1">Current page: {pathname}</Typography>
+      
     </Box>
   );
 }
@@ -180,7 +191,7 @@ function DashboardLayoutSlots(props) {
             ) : (
                 <p>Loading profile...</p>
             )}
-          <DemoPageContent pathname={router.pathname} />
+          <DemoPageContent profileData={profileData} pathname={router.pathname} />
         </DashboardLayout>
       </AppProvider>
     </DemoProvider>
