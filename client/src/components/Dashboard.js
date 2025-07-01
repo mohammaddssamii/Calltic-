@@ -23,28 +23,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import ProfilePage from './profilePage';
+import RedeemIcon from '@mui/icons-material/Redeem';
 
-const NAVIGATION = [
-  {
-    kind: 'header',
-    title: 'Main items',
-  },
-  {
-    segment: 'dashboard',
-    title: 'Dashboard',
-    icon: <DashboardIcon />,
-  },
-  {
-    segment: 'orders',
-    title: 'Orders',
-    icon: <ShoppingCartIcon />,
-  },
-  {
-    segment: 'profile',
-    title: 'Profile',
-    icon: <AccountBoxIcon />,
-  },
-];
+
 
 const demoTheme = createTheme({
   cssVariables: {
@@ -75,6 +56,12 @@ function DemoPageContent({ pathname, profileData }) {
     >
       {pathname === '/profile' && (
         <ProfilePage profileData={profileData} />
+      )}
+      {pathname === '/product' && (
+        <div>
+          <h1>Product Page</h1>
+          <p>This is the product page content.</p>
+        </div>
       )}
     
       <Typography variant="body1">Current page: {pathname}</Typography>
@@ -117,7 +104,7 @@ function SidebarFooter({ mini }) {
       variant="caption"
       sx={{ m: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}
     >
-      {mini ? '© MUI' : `© ${new Date().getFullYear()} Made with love by MUI`}
+      {mini ? '©LIGHTIC' : `© ${new Date().getFullYear()} Made with love by LIGHTIC`}
     </Typography>
   );
 }
@@ -140,8 +127,37 @@ function CustomAppTitle() {
 }
 
 function DashboardLayoutSlots(props) {
+  
     const navigation = useNavigate();
     const [profileData, setProfileData] = useState({});
+    const [isAdmin, setIsAdmin] = useState(false);
+
+const NAVIGATION = [
+  {
+    kind: 'header',
+    title: 'Main items',
+  },
+  {
+    segment: 'dashboard',
+    title: 'Dashboard',
+    icon: <DashboardIcon />,
+  },
+  {
+    segment: 'orders',
+    title: 'Orders',
+    icon: <ShoppingCartIcon />,
+  },
+  {
+    segment: 'profile',
+    title: 'Profile',
+    icon: <AccountBoxIcon />,
+  },
+  ...(isAdmin ? [{segment: 'product',
+    title: 'Product',
+    icon: <RedeemIcon />,}]:[]), // Only show this item if the user is an admin
+  
+];
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -154,6 +170,7 @@ function DashboardLayoutSlots(props) {
                     });
                     if (response.status === 200) {
                         setProfileData(response.data);
+                        setIsAdmin(response.data.role === 'admin'); // Check if the user is an admin
                     } else {
                         console.error('Failed to fetch profile:', response.status);
                     }
