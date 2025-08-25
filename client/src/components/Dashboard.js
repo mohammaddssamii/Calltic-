@@ -24,6 +24,9 @@ import { useNavigate } from 'react-router-dom';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import ProfilePage from './profilePage';
 import RedeemIcon from '@mui/icons-material/Redeem';
+import ProductCrud from './productCrud';
+import { Category } from './category';
+import CategoryIcon from '@mui/icons-material/Category';
 
 
 
@@ -58,12 +61,12 @@ function DemoPageContent({ pathname, profileData }) {
         <ProfilePage profileData={profileData} />
       )}
       {pathname === '/product' && (
-        <div>
-          <h1>Product Page</h1>
-          <p>This is the product page content.</p>
-        </div>
+       <ProductCrud />
       )}
-    
+      
+      {pathname === '/category' && (
+       <Category />
+      )}
       <Typography variant="body1">Current page: {pathname}</Typography>
       
     </Box>
@@ -152,9 +155,17 @@ const NAVIGATION = [
     title: 'Profile',
     icon: <AccountBoxIcon />,
   },
+ 
   ...(isAdmin ? [{segment: 'product',
     title: 'Product',
-    icon: <RedeemIcon />,}]:[]), // Only show this item if the user is an admin
+    icon: <RedeemIcon />,
+  },
+  {
+    segment: 'category',
+    title: 'Category',
+    icon: <CategoryIcon />,
+  }
+  ]:[]), // Only show this item if the user is an admin
   
 ];
 
