@@ -13,6 +13,9 @@ import axios from 'axios';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
 
 function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
@@ -35,6 +38,13 @@ export default function BasicTable() {
     const [image, setImage] = useState('');
     const [apiCategories, setApiCategories] = useState([]);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [snackOpen, setSnackOpen] = useState(false);
+    const [snackMessage, setSnackMessage] = useState('');
+    const [snackSeverity, setSnackSeverity] = useState('success'); // success أو error
+
+    const handleSnackClose = () => {
+     setSnackOpen(false);
+    };
 
 
     React.useEffect(() => {
@@ -56,6 +66,11 @@ export default function BasicTable() {
          <form onSubmit={async(e) => {
            e.preventDefault();
 
+           if (!name || !description || !price || !category || !image) {
+               alert("Please fill in all fields before submitting.");
+               return; 
+            }
+
            const productData = { name, description, price, category, image };
            try {
             if(editingProduct) {
@@ -76,6 +91,10 @@ export default function BasicTable() {
       setRows(rows.map(r => r._id === response.data._id ? { ...response.data, category: categoryObj } : r));
       setEditingProduct(null); 
 
+       setSnackMessage('Product updated successfully!');
+       setSnackSeverity('success');
+       setSnackOpen(true);
+
     } else {
       // Create new product
       const response = await axios.post('http://127.0.0.1:5000/api/products', productData, {
@@ -87,9 +106,18 @@ export default function BasicTable() {
 
       const categoryObj = apiCategories.find(cat => cat._id === response.data.category);
       setRows([...rows, { ...response.data, category: categoryObj }]);
+
+      setSnackMessage('Product added successfully!');
+      setSnackSeverity('success');
+      setSnackOpen(true);
     }
            } catch (error) {
             console.error(error);
+
+            setSnackMessage('Failed to save product: ' + (error.response?.data?.message || error.message));
+            setSnackSeverity('error');
+            setSnackOpen(true);
+
            }
            
 
@@ -209,6 +237,11 @@ export default function BasicTable() {
           ))}
         </TableBody>
       </Table>
+      <Snackbar open={snackOpen} autoHideDuration={4000} onClose={handleSnackClose}>
+        <MuiAlert onClose={handleSnackClose} severity={snackSeverity} sx={{ width: '100%' }}>
+             {snackMessage}
+        </MuiAlert>
+      </Snackbar>
     </TableContainer>
   );
 }
