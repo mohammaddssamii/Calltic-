@@ -15,6 +15,7 @@ import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import Input from '@mui/material/Input';
 
 
 function createData(name, calories, fat, carbs, protein) {
@@ -35,7 +36,7 @@ export default function BasicTable() {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
-    const [image, setImage] = useState('');
+    const [image, setImage] = useState(null);
     const [apiCategories, setApiCategories] = useState([]);
     const [editingProduct, setEditingProduct] = useState(null);
     const [snackOpen, setSnackOpen] = useState(false);
@@ -71,16 +72,25 @@ export default function BasicTable() {
                return; 
             }
 
-           const productData = { name, description, price, category, image };
+           //const productData = { name, description, price, category, image };
+
+           const data = new FormData();
+           data.append('name', name);
+           data.append('description', description);
+           data.append('price', price);
+           data.append('category', category); 
+           data.append('image', image);
+           
+
            try {
             if(editingProduct) {
       // Update existing product
       const response = await axios.put(
         `http://127.0.0.1:5000/api/products/${editingProduct._id}`,
-        productData,
+        data,
         {
           headers: {
-            'Content-Type': 'application/json',
+           // 'Content-Type': 'application/json',
             "Authorization": `Bearer ${localStorage.getItem('token')}`
           }
         }
@@ -97,9 +107,9 @@ export default function BasicTable() {
 
     } else {
       // Create new product
-      const response = await axios.post('http://127.0.0.1:5000/api/products', productData, {
+      const response = await axios.post('http://127.0.0.1:5000/api/products', data, {
         headers: {
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
           "Authorization": `Bearer ${localStorage.getItem('token')}`
         }
       });
@@ -125,7 +135,7 @@ export default function BasicTable() {
            setDescription('');
            setPrice('');
            setCategory('');
-           setImage('');
+           setImage(null);
          }}>
       <TextField
         label="Name"
@@ -151,6 +161,7 @@ export default function BasicTable() {
         value={price}
         onChange={(e) => setPrice(e.target.value)}
       />
+
        <InputLabel id="demo-simple-select-label">Category</InputLabel>
         <Select
     labelId="demo-simple-select-label"
@@ -165,17 +176,17 @@ export default function BasicTable() {
       </MenuItem>
     ))}
   </Select>
-       <TextField
-        label="Image URL"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={image}
-        onChange={(e) => setImage(e.target.value)}
-      />
-      <Button
-      variant="contained"
-      color="primary"
+
+       <Input
+       type='file'
+       accept='image/*'
+       label="Image URL"
+       fullWidth
+       onChange={(e) => setImage(e.target.files[0])}
+     />
+     <Button
+       variant="contained"
+       color="primary"
       type="submit"
       >
         {editingProduct ? "Update" : "Submit"}
@@ -205,7 +216,7 @@ export default function BasicTable() {
               <TableCell align="right">{row.description}</TableCell>
               <TableCell align="right">{row.price}</TableCell>
               <TableCell align="right">{row.category.name}</TableCell>
-              <TableCell align="right"><img src={row.image} alt={row.name} style={{ width: '100px' }} /></TableCell>
+              <TableCell align="right"><img src={`http://127.0.0.1:5000/uploads/${row.image}`} alt={row.name} style={{ width: '100px' }} /></TableCell>
                <TableCell align="right">
                 <Button onClick={() => {
                    setEditingProduct(row);

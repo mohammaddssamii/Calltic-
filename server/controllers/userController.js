@@ -69,13 +69,12 @@ exports.getProfile = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const updates = req.body;
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
-    }
+    const profileImage = req.file ? req.file.path : null;
+    const { username, email, fullName, address, phoneNumber } = req.body;
+    const user = await User.findByIdAndUpdate(req.user.id,{username,email,profileImage,fullName,address,phoneNumber},{new: true}).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password');
-    res.json(user);
+    await user.save();
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

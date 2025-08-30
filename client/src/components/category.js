@@ -10,104 +10,119 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-
+ 
 export function Category() {
-const [categories, setCategories] = React.useState([]);
-const [name, setName] = React.useState("");
-const [editingCategory, setEditingCategory] = React.useState(null);
- const [rows, setRows] = useState([]);
+  const [categories, setCategories] = React.useState([]);
+  const [name, setName] = React.useState("");
+  const [editingCategory, setEditingCategory] = React.useState(null);
 
-useEffect(() => {
+  useEffect(() => {
     fetchCategories();
-}, []);
+  }, []);
 
-const fetchCategories = async () => {
+  const fetchCategories = async () => {
     try {
-        const response = await axios.get("http://127.0.0.1:5000/api/categories");
-        setCategories(response.data);
+      const response = await axios.get("http://127.0.0.1:5000/api/categories");
+      setCategories(response.data);
     } catch (error) {
-        console.error("Error fetching categories:", error);
+      console.error("Error fetching categories:", error);
     }
-};
-return (
+  };
+
+  return (
     <>
-     <form onSubmit={async(e) => {
-           e.preventDefault();
-           const newRow = {
-             name,
-           };
-  
-           try {
-             const response = await axios.post('http://127.0.0.1:5000/api/categories', newRow,{
-               headers: {
-                 'Content-Type': 'application/json',
-                 "Authorization": `Bearer ${localStorage.getItem('token')}`
-               }
-             });
-             console.log(response.data);
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const newRow = { name };
 
-           setRows([...rows, response.data]);
+          try {
+            const response = await axios.post(
+              "http://127.0.0.1:5000/api/categories",
+              newRow,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+            console.log(response.data);
 
-           } catch (error) {
-              console.error(error);
-           }
+            setCategories([...categories, response.data]); // ✅ تعديل
+          } catch (error) {
+            console.error(error);
+          }
 
-           setName('');
-         }}>
-      <TextField
-        label="Name"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        type="submit"
+          setName("");
+        }}
       >
-        Submit
-      </Button>
-    </form>
+        <TextField
+          label="Name"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Button variant="contained" color="primary" type="submit">
+          Submit
+        </Button>
+      </form>
+
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow
-                  key={row._id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {row.name}
-                  </TableCell>
-             
-                   <TableCell align="right">
-                    <Button >Update</Button>
-                    <Button onClick={async()=>{
-                        if(window.confirm("Are you sure you want to delete this category?")) {
-                          try {
-                            await axios.delete(`http://127.0.0.1:5000/api/categories/${row._id}`, {
-                              headers: {
-                                "Authorization": `Bearer ${localStorage.getItem('token')}`
-                              }
-                            });
-                            setRows(rows.filter(r => r._id !== row._id));
-                          } catch (error) {
-                            console.error(error);
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell align="right">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {categories.map((row) => ( // ✅ تعديل
+            <TableRow
+              key={row._id}
+              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            >
+              <TableCell component="th" scope="row">
+                {row.name}
+              </TableCell>
+
+              <TableCell align="right">
+                <Button>Update</Button>
+                <Button
+                  onClick={async () => {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to delete this category?"
+                      )
+                    ) {
+                      try {
+                        await axios.delete(
+                          `http://127.0.0.1:5000/api/categories/${row._id}`,
+                          {
+                            headers: {
+                              Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                              )}`,
+                            },
                           }
-                        }
-                    }}>Delete</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        );
+                        setCategories(
+                          categories.filter((c) => c._id !== row._id) // ✅ تعديل
+                        );
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </>
-)
+  );
 }
