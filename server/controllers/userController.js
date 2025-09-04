@@ -69,16 +69,28 @@ exports.getProfile = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const profileImage = req.file ? req.file.path : null;
     const { username, email, fullName, address, phoneNumber } = req.body;
-    const user = await User.findByIdAndUpdate(req.user.id,{username,email,profileImage,fullName,address,phoneNumber},{new: true}).select('-password');
+    let profileImage = req.file ? req.file.filename : undefined;
+
+    const updateData = { username, email, fullName, address, phoneNumber };
+    if (profileImage) updateData.profileImage = profileImage;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      updateData,
+      { new: true }
+    ).select('-password');
+
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    await user.save();
+    res.status(200).json({ message: 'Profile updated successfully', updatedUser: user });
+
   } catch (error) {
+    console.error('Update error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
