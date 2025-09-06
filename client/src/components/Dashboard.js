@@ -29,6 +29,7 @@ import { Category } from './category';
 import CategoryIcon from '@mui/icons-material/Category';
 import DisplayProduct from './displayProduct';
 import Cart from './cart';
+import  Order  from './orders';
 
 
 
@@ -61,6 +62,9 @@ function DemoPageContent({ pathname, profileData }) {
     >
       {pathname === '/profile' && (
         <ProfilePage profileData={profileData} />
+      )}
+      {pathname === '/orders' && (
+        <Order />
       )}
       {pathname === '/DisplayProduct' && (
         <DisplayProduct />
@@ -154,13 +158,13 @@ const NAVIGATION = [
     icon: <DashboardIcon />,
   },
   {
-    segment: 'Cart',
-    title: 'Cart',
+    segment: 'DisplayProduct',
+    title: 'Display Product',
     icon: <ShoppingCartIcon />,
   },
   {
-    segment: 'DisplayProduct',
-    title: 'Display Product',
+    segment: 'Cart',
+    title: 'Cart',
     icon: <ShoppingCartIcon />,
   },
   {

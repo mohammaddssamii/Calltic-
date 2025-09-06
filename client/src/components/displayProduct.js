@@ -42,6 +42,8 @@ const DisplayProduct = () => {
                         <img src={`http://127.0.0.1:5000/uploads/${product.image}`} alt={product.name} style={{ width: '100px', height: '100px' }} />
                         <h3>{product.name}</h3>
                         <p>{product.description}</p>
+                        <p>Price: ${product.price}</p>
+                        <p>Category: {product.category.name}</p>
                         <button onClick={() => addToCart(product._id)}>Add to Cart</button>
                     </div>
                 ))}
