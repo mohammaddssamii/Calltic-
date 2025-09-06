@@ -128,7 +128,7 @@ window.location.replace(window.location.href);
       <img
         src={previewImage || 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/...'}
         alt="Profile Avatar"
-        style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+        style={{ width: '200px', height: '200px', borderRadius: '50%' }}
       />
       <h1>User Name: {profileData.fullName}</h1>
       <h2>Email: {profileData.email}</h2>

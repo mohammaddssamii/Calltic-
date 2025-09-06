@@ -27,6 +27,8 @@ import RedeemIcon from '@mui/icons-material/Redeem';
 import ProductCrud from './productCrud';
 import { Category } from './category';
 import CategoryIcon from '@mui/icons-material/Category';
+import DisplayProduct from './displayProduct';
+import Cart from './cart';
 
 
 
@@ -59,6 +61,12 @@ function DemoPageContent({ pathname, profileData }) {
     >
       {pathname === '/profile' && (
         <ProfilePage profileData={profileData} />
+      )}
+      {pathname === '/DisplayProduct' && (
+        <DisplayProduct />
+      )}
+       {pathname === '/Cart' && (
+        <Cart />
       )}
       {pathname === '/product' && (
        <ProductCrud />
@@ -144,6 +152,16 @@ const NAVIGATION = [
     segment: 'dashboard',
     title: 'Dashboard',
     icon: <DashboardIcon />,
+  },
+  {
+    segment: 'Cart',
+    title: 'Cart',
+    icon: <ShoppingCartIcon />,
+  },
+  {
+    segment: 'DisplayProduct',
+    title: 'Display Product',
+    icon: <ShoppingCartIcon />,
   },
   {
     segment: 'orders',
