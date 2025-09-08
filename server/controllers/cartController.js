@@ -6,24 +6,20 @@ exports.addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
-    // تحقق من وجود productId وكمية صحيحة
     if (!productId || !quantity || quantity < 1) {
       return res.status(400).json({ message: 'Invalid product ID or quantity' });
     }
 
-    // تحقق من صحة ObjectId
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ message: 'Invalid product ID format' });
     }
 
-    // جلب السلة الخاصة بالمستخدم
     let userCart = await Cart.findOne({ user: req.user.id });
 
     if (!userCart) {
       userCart = new Cart({ user: req.user.id, items: [] });
     }
 
-    // التحقق إذا المنتج موجود مسبقًا
     const existingItem = userCart.items.find(item => item.product.equals(productId));
     if (existingItem) {
       existingItem.quantity += quantity;
@@ -42,10 +38,15 @@ exports.addToCart = async (req, res) => {
 // Get user cart
 exports.getCart = async (req, res) => {
   try {
-    const userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    let userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+
     if (!userCart) {
       return res.status(200).json({ items: [] });
     }
+
+    // تصفية أي items بدون product
+    userCart.items = userCart.items.filter(item => item.product);
+
     res.status(200).json(userCart);
   } catch (error) {
     console.error('Error fetching cart:', error.message);
