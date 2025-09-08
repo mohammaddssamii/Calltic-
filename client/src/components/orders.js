@@ -14,19 +14,16 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   Chip,
   Divider,
   Card,
   CardContent,
   TextField,
   TablePagination,
+  Box,
   Grid,
 } from "@mui/material";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-import { useTheme } from "@mui/material/styles";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -35,7 +32,6 @@ const Orders = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const theme = useTheme();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -76,35 +72,33 @@ const Orders = () => {
     setPage(0);
   };
 
-  // filter orders by search term
-  const filteredOrders = orders.filter(
-    (order) =>
-      order._id.toLowerCase().includes(search.toLowerCase()) ||
-      order.user.username.toLowerCase().includes(search.toLowerCase())
-  );
+  // 🔥 البحث يشمل username و customerName و customerPhone
+  const filteredOrders = orders.filter((order) => {
+    const username = order.user?.username ? String(order.user.username).toLowerCase() : "";
+    const customerName = order.customerName ? String(order.customerName).toLowerCase() : "";
+    const customerPhone = order.customerPhone ? String(order.customerPhone).toLowerCase() : "";
+    const searchLower = String(search).toLowerCase();
+
+    return (
+      username.includes(searchLower) ||
+      customerName.includes(searchLower) ||
+      customerPhone.includes(searchLower)
+    );
+  });
 
   return (
-    <div style={{ padding: "30px" }}>
+    <Box sx={{ padding: "30px" }}>
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
         <ShoppingBagIcon fontSize="large" color="primary" />
-        <Typography
-          variant="h5"
-          sx={{ fontWeight: "bold", marginLeft: "10px" }}
-        >
+        <Typography variant="h5" sx={{ fontWeight: "bold", marginLeft: "10px" }}>
           Orders Management
         </Typography>
-      </div>
+      </Box>
 
       {/* Search Bar */}
       <TextField
-        label="Search by Order ID or User"
+        label="Search by User, Customer or Phone"
         variant="outlined"
         size="small"
         fullWidth
@@ -113,20 +107,18 @@ const Orders = () => {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* Orders Table inside Card */}
+      {/* Orders Table */}
       <Card sx={{ borderRadius: "16px", boxShadow: 3 }}>
         <CardContent>
           <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
             <Table>
               <TableHead>
-                <TableRow
-                
-                >
-                  <TableCell sx={{ fontWeight: "bold" }}>Order ID</TableCell>
+                <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Products</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Quantity</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Customer Name</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Customer Phone</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Total Price</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Date & Time</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                 </TableRow>
@@ -136,18 +128,11 @@ const Orders = () => {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((order) => (
                     <TableRow key={order._id} hover>
-                      <TableCell>{order._id}</TableCell>
                       <TableCell>{order.user.username}</TableCell>
-                      <TableCell>
-                        {order.items.map((item) => item.product.name).join(", ")}
-                      </TableCell>
-                      <TableCell>
-                        {order.items.reduce(
-                          (total, item) => total + item.quantity,
-                          0
-                        )}
-                      </TableCell>
+                      <TableCell>{order.customerName}</TableCell>
+                      <TableCell>{order.customerPhone}</TableCell>
                       <TableCell>${order.total}</TableCell>
+                      <TableCell>{new Date(order.createdAt).toLocaleString()}</TableCell>
                       <TableCell>
                         <Chip
                           label={order.status}
@@ -179,7 +164,6 @@ const Orders = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
           <TablePagination
             component="div"
             count={filteredOrders.length}
@@ -192,20 +176,9 @@ const Orders = () => {
         </CardContent>
       </Card>
 
-      {/* Modal for Order Details */}
-      <Dialog
-        open={openModal}
-        onClose={handleCloseModal}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "20px",
-          }}
-        >
+      {/* Modal */}
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", fontSize: "20px" }}>
           Order Details
         </DialogTitle>
         <Divider />
@@ -213,10 +186,13 @@ const Orders = () => {
           {selectedOrder && (
             <>
               <Typography variant="subtitle1" gutterBottom>
-                <strong>Order ID:</strong> {selectedOrder._id}
+                <strong>User:</strong> {selectedOrder.user.username}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
-                <strong>User:</strong> {selectedOrder.user.username}
+                <strong>Customer Name:</strong> {selectedOrder.customerName}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Customer Phone:</strong> {selectedOrder.customerPhone}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
                 <strong>Status:</strong>{" "}
@@ -233,35 +209,41 @@ const Orders = () => {
                   sx={{ fontWeight: "bold" }}
                 />
               </Typography>
+
+              {/* Products Section with Grid Cards */}
+              <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                Products:
+              </Typography>
+              {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  {selectedOrder.items.map((item) => (
+                    <Grid item xs={12} sm={6} key={item.product._id}>
+                      <Paper elevation={2} sx={{ padding: 2, borderRadius: "12px" }}>
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {item.product.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Quantity: {item.quantity}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Price: ${item.product.price}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography variant="body2" sx={{ fontStyle: "italic", color: "#888", mb: 2 }}>
+                  No products in this order.
+                </Typography>
+              )}
+
               <Typography variant="subtitle1" gutterBottom>
                 <strong>Total Price:</strong> ${selectedOrder.total}
               </Typography>
-
-              <Divider sx={{ marginY: 2 }} />
-
-              <Typography variant="h6" gutterBottom>
-                Products
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Date & Time:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}
               </Typography>
-              <Grid container spacing={2}>
-                {selectedOrder.items.map((item) => (
-                  <Grid item xs={12} sm={6} key={item.product._id}>
-                    <Paper
-                      elevation={2}
-                      sx={{ padding: 2, borderRadius: "12px" }}
-                    >
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {item.product.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Quantity: {item.quantity}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Price: ${item.product.price}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
             </>
           )}
         </DialogContent>
@@ -276,7 +258,7 @@ const Orders = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 

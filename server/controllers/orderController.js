@@ -5,6 +5,7 @@ const product = require('../models/productModel');
 // Create a new order
 exports.placeOrder = async (req, res) => {
   try {
+       const { customerName, customerPhone } = req.body;
     const userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
 
     if (!userCart || userCart.items.length === 0) {
@@ -26,6 +27,8 @@ exports.placeOrder = async (req, res) => {
     // إنشاء الأوردر
     const newOrder = new Order({
       user: req.user.id,
+      customerName,
+      customerPhone,
       items: validItems.map(item => ({
         product: item.product._id,
         quantity: item.quantity
