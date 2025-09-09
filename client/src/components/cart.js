@@ -17,7 +17,7 @@ const Cart = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:5000/api/cart/get-cart", {
+        const res = await axios.get("http://127.0.0.1:5000/api/cart", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setCartItems(res.data.items);
@@ -35,7 +35,7 @@ const Cart = () => {
     if (newQuantity < 1) return;
     try {
       await axios.put(
-        `http://127.0.0.1:5000/api/cart/update-quantity/${productId}`,
+        `http://127.0.0.1:5000/api/cart/${productId}`,
         { quantity: newQuantity },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -57,7 +57,7 @@ const Cart = () => {
 
   const removeFromCart = async (productId) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/cart/remove-from-cart/${productId}`, {
+      await axios.delete(`http://127.0.0.1:5000/api/cart/${productId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCartItems((prev) => prev.filter((item) => item.product._id !== productId));
@@ -97,7 +97,7 @@ const Cart = () => {
     };
 
     try {
-      await axios.post("http://127.0.0.1:5000/api/orders/place-order", orderData, {
+      await axios.post("http://127.0.0.1:5000/api/orders", orderData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setSnackMessage("Order placed successfully!");

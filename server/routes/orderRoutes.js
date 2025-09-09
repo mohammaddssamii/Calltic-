@@ -3,7 +3,12 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const userAuth = require('../middleware/authMiddleWare');
 
-router.post('/place-order', userAuth, orderController.placeOrder);
-router.get('/get-all-orders', userAuth, orderController.getOrders);
+// Place a new order
+router.post('/', userAuth, orderController.placeOrder);
+
+// Get all orders (admin) or user orders
+router.get('/', userAuth, orderController.getOrders);
+
+
 
 module.exports = router;

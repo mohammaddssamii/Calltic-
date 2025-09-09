@@ -1,7 +1,9 @@
+// controllers/cartController.js
 const Cart = require('../models/cart');
+const Product = require('../models/productModel');
 const mongoose = require('mongoose');
 
-// Add item to cart
+// ===== Add item to cart =====
 exports.addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -14,8 +16,13 @@ exports.addToCart = async (req, res) => {
       return res.status(400).json({ message: 'Invalid product ID format' });
     }
 
-    let userCart = await Cart.findOne({ user: req.user.id });
+    // تحقق من أن المنتج موجود
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(400).json({ message: 'Product not found or deleted' });
+    }
 
+    let userCart = await Cart.findOne({ user: req.user.id });
     if (!userCart) {
       userCart = new Cart({ user: req.user.id, items: [] });
     }
@@ -28,6 +35,16 @@ exports.addToCart = async (req, res) => {
     }
 
     await userCart.save();
+
+    // Populate كامل مع category و restaurant
+    userCart = await userCart.populate({
+      path: 'items.product',
+      populate: ['category', 'restaurant']
+    });
+
+    // فلترة أي items بدون product (محذوفة من النظام)
+    userCart.items = userCart.items.filter(item => item.product);
+
     res.status(200).json({ message: 'Item added to cart', cart: userCart });
   } catch (error) {
     console.error('Error adding to cart:', error.message);
@@ -35,16 +52,19 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-// Get user cart
+// ===== Get user cart =====
 exports.getCart = async (req, res) => {
   try {
-    let userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    let userCart = await Cart.findOne({ user: req.user.id }).populate({
+      path: 'items.product',
+      populate: ['category', 'restaurant']
+    });
 
     if (!userCart) {
       return res.status(200).json({ items: [] });
     }
 
-    // تصفية أي items بدون product
+    // فلترة أي items بدون product
     userCart.items = userCart.items.filter(item => item.product);
 
     res.status(200).json(userCart);
@@ -54,7 +74,7 @@ exports.getCart = async (req, res) => {
   }
 };
 
-// Remove item from cart
+// ===== Remove item from cart =====
 exports.removeFromCart = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -71,13 +91,20 @@ exports.removeFromCart = async (req, res) => {
     userCart.items = userCart.items.filter(item => !item.product.equals(productId));
     await userCart.save();
 
-    res.status(200).json({ message: 'Item removed from cart', cart: userCart });
+    // Populate بعد التعديل
+    const populatedCart = await userCart.populate({
+      path: 'items.product',
+      populate: ['category', 'restaurant']
+    });
+
+    res.status(200).json({ message: 'Item removed from cart', cart: populatedCart });
   } catch (error) {
     console.error('Error removing from cart:', error.message);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-// Update quantity of an item in cart
+
+// ===== Update quantity of an item in cart =====
 exports.updateQuantity = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -104,7 +131,13 @@ exports.updateQuantity = async (req, res) => {
     item.quantity = quantity;
     await userCart.save();
 
-    res.status(200).json({ message: 'Quantity updated', cart: userCart });
+    // Populate كامل بعد التعديل
+    const populatedCart = await userCart.populate({
+      path: 'items.product',
+      populate: ['category', 'restaurant']
+    });
+
+    res.status(200).json({ message: 'Quantity updated', cart: populatedCart });
   } catch (error) {
     console.error('Error updating quantity:', error.message);
     res.status(500).json({ message: 'Internal server error', error: error.message });

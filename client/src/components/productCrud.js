@@ -1,258 +1,307 @@
-import * as React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import { useState } from 'react';
-import axios from 'axios';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import InputLabel from '@mui/material/InputLabel';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import Input from '@mui/material/Input';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Grid,
+  Paper,
+  Select,
+  MenuItem,
+  InputLabel,
+  Input,
+  Avatar,
+  Stack,
+  IconButton,
+  Snackbar,
+  Alert as MuiAlert,
+} from "@mui/material";
+import axios from "axios";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
+const ProductPage = () => {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: "",
+    restaurant: "",
+    image: null,
+  });
+  const [categories, setCategories] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
+  const [snackSeverity, setSnackSeverity] = useState("success");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterRestaurant, setFilterRestaurant] = useState("");
+  const [errors, setErrors] = useState({});
 
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
+  const token = localStorage.getItem("token");
 
-export default function BasicTable() {
-    const [rows, setRows] = useState([]);
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
-    const [image, setImage] = useState(null);
-    const [apiCategories, setApiCategories] = useState([]);
-    const [editingProduct, setEditingProduct] = useState(null);
-    const [snackOpen, setSnackOpen] = useState(false);
-    const [snackMessage, setSnackMessage] = useState('');
-    const [snackSeverity, setSnackSeverity] = useState('success'); // success أو error
+  const formRef = useRef(null); // <<< ref للفورم
 
-    const handleSnackClose = () => {
-     setSnackOpen(false);
+  const handleSnackClose = () => setSnackOpen(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resProducts, resCategories, resRestaurants] = await Promise.all([
+          axios.get("http://127.0.0.1:5000/api/products"),
+          axios.get("http://127.0.0.1:5000/api/categories"),
+          axios.get("http://127.0.0.1:5000/api/restaurants"),
+        ]);
+
+        const productsArray = Array.isArray(resProducts.data) ? resProducts.data : resProducts.data.products;
+
+        const mappedProducts = productsArray.map((p) => ({
+          ...p,
+          category:
+            p.category?._id
+              ? resCategories.data.find((c) => c._id === p.category._id) || { name: "" }
+              : resCategories.data.find((c) => c._id === p.category) || { name: "" },
+          restaurant:
+            p.restaurant?._id
+              ? resRestaurants.data.find((r) => r._id === p.restaurant._id) || { name: "" }
+              : resRestaurants.data.find((r) => r._id === p.restaurant) || { name: "" },
+        }));
+
+        setProducts(mappedProducts);
+        setCategories(resCategories.data);
+        setRestaurants(resRestaurants.data);
+      } catch (err) {
+        console.error("Fetch Error:", err.response || err);
+        alert("Error fetching data, check console.");
+      }
     };
+    fetchData();
+  }, []);
 
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleImage = (e) => setForm({ ...form, image: e.target.files[0] });
 
-    React.useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await axios.get('http://127.0.0.1:5000/api/products');
-          setRows(response.data);
-          const categoryResponse = await axios.get('http://127.0.0.1:5000/api/categories');
-          setApiCategories(categoryResponse.data);
-        } catch (error) {
-          console.error(error);
-        }
-      };
-      fetchData();
-    }, []);
+  const validateForm = () => {
+    let tempErrors = {};
+    let isValid = true;
 
-  return (
-    <TableContainer component={Paper}>
-         <form onSubmit={async(e) => {
-           e.preventDefault();
+    if (!form.name) { tempErrors.name = "Name is required"; isValid = false; }
+    if (!form.description) { tempErrors.description = "Description is required"; isValid = false; }
+    if (!form.price) { tempErrors.price = "Price is required"; isValid = false; }
+    if (!form.category) { tempErrors.category = "Please select a category"; isValid = false; }
+    if (!form.restaurant) { tempErrors.restaurant = "Please select a restaurant"; isValid = false; }
+    if (!form.image && !editingId) { tempErrors.image = "Image is required"; isValid = false; }
 
-           if (!name || !description || !price || !category || !image) {
-               alert("Please fill in all fields before submitting.");
-               return; 
-            }
+    const duplicate = products.find(
+      (p) =>
+        p.name.toLowerCase() === form.name.toLowerCase() &&
+        p.restaurant?._id === form.restaurant &&
+        p._id !== editingId
+    );
+    if (duplicate) { tempErrors.name = "This product name already exists for the selected restaurant"; isValid = false; }
 
-           //const productData = { name, description, price, category, image };
+    setErrors(tempErrors);
+    return isValid;
+  };
 
-           const data = new FormData();
-           data.append('name', name);
-           data.append('description', description);
-           data.append('price', price);
-           data.append('category', category); 
-           data.append('image', image);
-           
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!token) return alert("No token provided");
+    if (!validateForm()) return;
 
-           try {
-            if(editingProduct) {
-      // Update existing product
-      const response = await axios.put(
-        `http://127.0.0.1:5000/api/products/${editingProduct._id}`,
-        data,
-        {
-          headers: {
-           // 'Content-Type': 'application/json',
-            "Authorization": `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+    try {
+      const formData = new FormData();
+      Object.keys(form).forEach((key) => { if (form[key] !== null) formData.append(key, form[key]); });
 
-      
-      const categoryObj = apiCategories.find(cat => cat._id === response.data.category);
-      setRows(rows.map(r => r._id === response.data._id ? { ...response.data, category: categoryObj } : r));
-      setEditingProduct(null); 
+      let res;
+      if (editingId) {
+        res = await axios.put(
+          `http://127.0.0.1:5000/api/products/${editingId}`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProducts(products.map((p) =>
+          p._id === res.data._id
+            ? {
+                ...res.data,
+                category: categories.find((c) => c._id === res.data.category) || { name: "" },
+                restaurant: restaurants.find((r) => r._id === res.data.restaurant) || { name: "" },
+              }
+            : p
+        ));
+        setEditingId(null);
+        setSnackMessage("Product updated successfully!");
+      } else {
+        res = await axios.post("http://127.0.0.1:5000/api/products", formData, { headers: { Authorization: `Bearer ${token}` } });
+        setProducts([
+          ...products,
+          {
+            ...res.data,
+            category: categories.find((c) => c._id === res.data.category) || { name: "" },
+            restaurant: restaurants.find((r) => r._id === res.data.restaurant) || { name: "" },
+          },
+        ]);
+        setSnackMessage("Product added successfully!");
+      }
 
-       setSnackMessage('Product updated successfully!');
-       setSnackSeverity('success');
-       setSnackOpen(true);
-
-    } else {
-      // Create new product
-      const response = await axios.post('http://127.0.0.1:5000/api/products', data, {
-        headers: {
-          // 'Content-Type': 'application/json',
-          "Authorization": `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      const categoryObj = apiCategories.find(cat => cat._id === response.data.category);
-      setRows([...rows, { ...response.data, category: categoryObj }]);
-
-      setSnackMessage('Product added successfully!');
-      setSnackSeverity('success');
+      setSnackSeverity("success");
+      setSnackOpen(true);
+      setForm({ name: "", description: "", price: "", category: "", restaurant: "", image: null });
+      setErrors({});
+    } catch (err) {
+      console.error(err);
+      setSnackMessage("Failed: " + (err.response?.data?.message || err.message));
+      setSnackSeverity("error");
       setSnackOpen(true);
     }
-           } catch (error) {
-            console.error(error);
+  };
 
-            setSnackMessage('Failed to save product: ' + (error.response?.data?.message || error.message));
-            setSnackSeverity('error');
-            setSnackOpen(true);
+  const handleEdit = (product) => {
+    setForm({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price || "",
+      category: product.category?._id || "",
+      restaurant: product.restaurant?._id || "",
+      image: null,
+    });
+    setEditingId(product._id);
+    setErrors({});
 
-           }
-           
+    // Scroll to form
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
 
-           setName('');
-           setDescription('');
-           setPrice('');
-           setCategory('');
-           setImage(null);
-         }}>
-      <TextField
-        label="Name"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <TextField
-        label="Description"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-       <TextField
-        label="Price"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
-      />
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!token) return alert("No token provided");
 
-       <InputLabel id="demo-simple-select-label">Category</InputLabel>
-        <Select
-    labelId="demo-simple-select-label"
-    id="demo-simple-select"
-    value={category}
-    label="Category"
-    onChange={(e) => setCategory(e.target.value)}
-  >
-    {apiCategories.map((cat) => (
-      <MenuItem key={cat._id} value={cat._id}>
-        {cat.name}
-      </MenuItem>
-    ))}
-  </Select>
+    try {
+      await axios.delete(`http://127.0.0.1:5000/api/products/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      setProducts(products.filter((p) => p._id !== id));
+      setSnackMessage("Product deleted successfully!");
+      setSnackSeverity("success");
+      setSnackOpen(true);
+    } catch (err) {
+      console.error(err);
+      setSnackMessage("Failed to delete product");
+      setSnackSeverity("error");
+      setSnackOpen(true);
+    }
+  };
 
-       <Input
-       type='file'
-       accept='image/*'
-       label="Image URL"
-       fullWidth
-       onChange={(e) => setImage(e.target.files[0])}
-     />
-     <Button
-       variant="contained"
-       color="primary"
-      type="submit"
-      >
-        {editingProduct ? "Update" : "Submit"}
-      </Button>
-
-    </form>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell align="right">Description</TableCell>
-            <TableCell align="right">Price</TableCell>
-            <TableCell align="right">Category</TableCell>
-            <TableCell align="right">Image</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              key={row._id}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {row.name}
-              </TableCell>
-              <TableCell align="right">{row.description}</TableCell>
-              <TableCell align="right">{row.price}</TableCell>
-              <TableCell align="right">{row.category.name}</TableCell>
-              <TableCell align="right"><img src={`http://127.0.0.1:5000/uploads/${row.image}`} alt={row.name} style={{ width: '100px' }} /></TableCell>
-               <TableCell align="right">
-                <Button onClick={() => {
-                   setEditingProduct(row);
-                   setName(row.name);
-                   setDescription(row.description);
-                   setPrice(row.price);
-                   setCategory(row.category._id);
-                   setImage(row.image);
-               }}>
-                   Update
-               </Button>
-
-                <Button onClick={async()=>{
-                    if(window.confirm("Are you sure you want to delete this product?")) {
-                      try {
-                        await axios.delete(`http://127.0.0.1:5000/api/products/${row._id}`, {
-                          headers: {
-                            "Authorization": `Bearer ${localStorage.getItem('token')}`
-                          }
-                        });
-                        setRows(rows.filter(r => r._id !== row._id));
-                      } catch (error) {
-                        console.error(error);
-                      }
-                    }
-                }}>Delete</Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Snackbar open={snackOpen} autoHideDuration={4000} onClose={handleSnackClose}>
-        <MuiAlert onClose={handleSnackClose} severity={snackSeverity} sx={{ width: '100%' }}>
-             {snackMessage}
-        </MuiAlert>
-      </Snackbar>
-    </TableContainer>
+  const filteredProducts = products.filter(
+    (p) =>
+      (!filterCategory || p.category?._id === filterCategory) &&
+      (!filterRestaurant || p.restaurant?._id === filterRestaurant) &&
+      (!searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-}
+
+  return (
+    <Box p={3}>
+      <Typography variant="h4" gutterBottom>
+        {editingId ? "Edit Product" : "Add New Product"}
+      </Typography>
+
+      {/* Form */}
+      <Paper sx={{ p: 3, mb: 4 }} ref={formRef}>
+        <Grid container spacing={2}>
+          {/* Name */}
+          <Grid item xs={12} sm={6}>
+            <TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth error={!!errors.name} helperText={errors.name} />
+          </Grid>
+          {/* Description */}
+          <Grid item xs={12} sm={6}>
+            <TextField label="Description" name="description" value={form.description} onChange={handleChange} fullWidth error={!!errors.description} helperText={errors.description} />
+          </Grid>
+          {/* Price */}
+          <Grid item xs={12} sm={6}>
+            <TextField label="Price" name="price" value={form.price} onChange={handleChange} fullWidth error={!!errors.price} helperText={errors.price} />
+          </Grid>
+          {/* Category */}
+          <Grid item xs={12} sm={6}>
+            <InputLabel>Category</InputLabel>
+            <Select value={form.category} name="category" onChange={handleChange} fullWidth error={!!errors.category}>
+              <MenuItem value="">Select Category</MenuItem>
+              {categories.map((c) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+            </Select>
+            <Typography variant="caption" color="error">{errors.category}</Typography>
+          </Grid>
+          {/* Restaurant */}
+          <Grid item xs={12} sm={6}>
+            <InputLabel>Restaurant</InputLabel>
+            <Select value={form.restaurant} name="restaurant" onChange={handleChange} fullWidth error={!!errors.restaurant}>
+              <MenuItem value="">Select Restaurant</MenuItem>
+              {restaurants.map((r) => <MenuItem key={r._id} value={r._id}>{r.name}</MenuItem>)}
+            </Select>
+            <Typography variant="caption" color="error">{errors.restaurant}</Typography>
+          </Grid>
+          {/* Image */}
+          <Grid item xs={12} sm={6}>
+            <Input type="file" accept="image/*" onChange={handleImage} />
+            {errors.image && <Typography variant="caption" color="error">{errors.image}</Typography>}
+            {form.image ? (
+              <Box sx={{ mt: 2, textAlign: "center" }}>
+                <Typography variant="body2">Preview:</Typography>
+                <Avatar src={URL.createObjectURL(form.image)} variant="rounded" sx={{ width: "100%", height: 200 }} />
+              </Box>
+            ) : editingId && (
+              <Box sx={{ mt: 2, textAlign: "center" }}>
+                <Typography variant="body2">Current image:</Typography>
+                <Avatar src={`http://127.0.0.1:5000/uploads/${products.find(p => p._id === editingId)?.image}`} variant="rounded" sx={{ width: "100%", height: 200 }} />
+              </Box>
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <Button variant="contained" color="primary" onClick={handleSubmit}>{editingId ? "Update" : "Add"} Product</Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Filters */}
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <TextField label="Search by name" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <Select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} displayEmpty>
+          <MenuItem value="">All Categories</MenuItem>
+          {categories.map((c) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+        </Select>
+        <Select value={filterRestaurant} onChange={(e) => setFilterRestaurant(e.target.value)} displayEmpty>
+          <MenuItem value="">All Restaurants</MenuItem>
+          {restaurants.map((r) => <MenuItem key={r._id} value={r._id}>{r.name}</MenuItem>)}
+        </Select>
+      </Box>
+
+      {/* Product Cards */}
+      <Grid container spacing={3}>
+        {filteredProducts.map((p) => (
+          <Grid item xs={12} sm={6} md={4} key={p._id}>
+            <Paper sx={{ p: 2, textAlign: "center" }}>
+              <Avatar src={`http://127.0.0.1:5000/uploads/${p.image}`} variant="rounded" sx={{ width: "100%", height: 200, mb: 1 }} />
+              <Typography variant="h6">{p.name}</Typography>
+              <Typography variant="body2">{p.description}</Typography>
+              <Typography variant="body2">Price: {p.price}</Typography>
+              <Typography variant="body2">Category: {p.category?.name}</Typography>
+              <Typography variant="body2">Restaurant: {p.restaurant?.name}</Typography>
+              <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 1 }}>
+                <IconButton color="primary" onClick={() => handleEdit(p)}><EditIcon /></IconButton>
+                <IconButton color="error" onClick={() => handleDelete(p._id)}><DeleteIcon /></IconButton>
+              </Stack>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Snackbar open={snackOpen} autoHideDuration={4000} onClose={handleSnackClose}>
+        <MuiAlert onClose={handleSnackClose} severity={snackSeverity} sx={{ width: "100%" }}>{snackMessage}</MuiAlert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default ProductPage;

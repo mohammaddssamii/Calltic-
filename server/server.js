@@ -6,6 +6,7 @@ const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const restaurantRoutes = require('./routes/resturantRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/restaurants', restaurantRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from the backend!');

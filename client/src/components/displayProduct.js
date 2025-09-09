@@ -43,7 +43,7 @@ const DisplayProduct = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://127.0.0.1:5000/api/cart/add-to-cart",
+        "http://127.0.0.1:5000/api/cart",
         { productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );

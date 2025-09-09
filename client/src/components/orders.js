@@ -37,7 +37,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       try {
         const res = await axios.get(
-          "http://127.0.0.1:5000/api/orders/get-all-orders",
+          "http://127.0.0.1:5000/api/orders",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

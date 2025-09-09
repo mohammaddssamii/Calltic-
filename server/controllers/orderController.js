@@ -1,30 +1,33 @@
 const Order = require('../models/orders');
 const Cart = require('../models/cart');
-const product = require('../models/productModel');
+const Product = require('../models/productModel');
 
-// Create a new order
+// Place order
 exports.placeOrder = async (req, res) => {
   try {
-       const { customerName, customerPhone } = req.body;
-    const userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    const { customerName, customerPhone } = req.body;
 
+    const userCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
     if (!userCart || userCart.items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
-    // فلترة المنتجات اللي موجودة فقط
+    // Filter valid products
     const validItems = userCart.items.filter(item => item.product);
     if (validItems.length === 0) {
-      return res.status(400).json({ message: 'Some products in your cart are no longer available' });
+      return res.status(400).json({ message: 'Some products are no longer available' });
     }
 
-    // حساب المجموع الكلي
+    // Optional: check all products belong to same restaurant
+    // const restaurantIds = [...new Set(validItems.map(i => i.product.restaurant.toString()))];
+    // if (restaurantIds.length > 1) return res.status(400).json({ message: 'Products from multiple restaurants not allowed' });
+
+    // Calculate total
     const total = validItems.reduce(
       (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
       0
     );
 
-    // إنشاء الأوردر
     const newOrder = new Order({
       user: req.user.id,
       customerName,
@@ -37,29 +40,26 @@ exports.placeOrder = async (req, res) => {
       status: 'completed'
     });
 
-    await newOrder.save();
+    const savedOrder = await newOrder.save();
 
-    // حذف السلة بعد إتمام الطلب
+    // Delete cart only after successful order
     await Cart.findOneAndDelete({ user: req.user.id });
 
-    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
+    res.status(201).json({ message: 'Order placed successfully', order: savedOrder });
   } catch (error) {
     console.error('Error placing order:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
-
-//Get all orders
+// Get orders
 exports.getOrders = async (req, res) => {
   try {
     let orders;
     if (req.user.role === 'admin') {
-      // Admin يشوف كل الأوردرات
-      orders = await Order.find().populate(['items.product','user']);
+      orders = await Order.find().populate(['items.product', 'user']);
     } else {
-      // المستخدم العادي يشوف أوردراته فقط
-      orders = await Order.find({ user: req.user.id }).populate(['items.product','user']);
+      orders = await Order.find({ user: req.user.id }).populate(['items.product', 'user']);
     }
     res.status(200).json(orders);
   } catch (error) {

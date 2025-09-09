@@ -30,7 +30,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import DisplayProduct from './displayProduct';
 import Cart from './cart';
 import  Order  from './orders';
-
+import RestaurantPage from './resturant';
 
 
 const demoTheme = createTheme({
@@ -78,6 +78,9 @@ function DemoPageContent({ pathname, profileData }) {
       
       {pathname === '/category' && (
        <Category />
+      )}
+      {pathname === '/restaurant' && (
+       <RestaurantPage />
       )}
       <Typography variant="body1">Current page: {pathname}</Typography>
       
@@ -186,7 +189,12 @@ const NAVIGATION = [
     segment: 'category',
     title: 'Category',
     icon: <CategoryIcon />,
-  }
+  },
+  {
+    segment: 'restaurant',
+    title: 'Restaurant',
+    icon: <CategoryIcon />,
+  },
   ]:[]), // Only show this item if the user is an admin
   
 ];
