@@ -4,6 +4,11 @@ const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   customerName: String,
   customerPhone: String,
+   fulfillment: { type: String, enum: ['pickup', 'delivery'] },
+  pickupType: { type: String, enum: ['dine-in', 'takeaway'], default: null },
+  region: { type: String, default: null },
+   deliveryAddress: { type: String, default: null },
+  notes: { type: String, default: '' },
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 }

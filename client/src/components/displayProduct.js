@@ -19,13 +19,21 @@ import {
   DialogContent,
   DialogActions,
   Slide,
-  Collapse,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Slider,
 } from "@mui/material";
 import { styled, keyframes } from "@mui/system";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import SearchIcon from "@mui/icons-material/Search";
+import { motion } from "framer-motion";
 
 // Slide Transition for Dialog
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -49,7 +57,6 @@ const neonColors = {
   Desserts: "#ff00ff",
   Others: "#ff4500",
 };
-
 const neonGlow = (color) => keyframes`
   0% { box-shadow: 0 0 5px ${color}, 0 0 10px ${color}; }
   50% { box-shadow: 0 0 15px ${color}, 0 0 30px ${color}; }
@@ -57,7 +64,7 @@ const neonGlow = (color) => keyframes`
 `;
 
 // Styled Components
-const StyledCard = styled(Card)(({ theme, glowColor }) => ({
+const StyledCard = styled(Card)(({ glowColor }) => ({
   transition: "transform 0.3s, box-shadow 0.3s",
   borderRadius: 16,
   display: "flex",
@@ -85,6 +92,16 @@ const DisplayProduct = () => {
   const [snackSeverity, setSnackSeverity] = useState("success");
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [productToRemove, setProductToRemove] = useState(null);
+  // eslint-disable-next-line
+  const [cartRestaurantId, setCartRestaurantId] = useState(null);
+  const [confirmClearDialogOpen, setConfirmClearDialogOpen] = useState(false);
+
+
+  // Filter & Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [maxPrice, setMaxPrice] = useState(100);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const token = localStorage.getItem("token");
 
@@ -120,35 +137,65 @@ const DisplayProduct = () => {
     }
   };
 
-  const fetchCart = async () => {
-    try {
-      const res = await axios.get("http://127.0.0.1:5000/api/cart", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart(res.data.items || []);
-    } catch (err) {
-      console.error("Error fetching cart:", err);
+ const fetchCart = async () => {
+  try {
+    const res = await axios.get("http://127.0.0.1:5000/api/cart", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setCart(res.data.items || []);
+    if (res.data.items && res.data.items.length > 0) {
+      setCartRestaurantId(res.data.items[0].product.restaurant._id);
+    } else {
+      setCartRestaurantId(null);
     }
-  };
+  } catch (err) {
+    console.error("Error fetching cart:", err);
+  }
+};
 
-  const addToCart = async (productId, quantity = 1) => {
-    try {
-      await axios.post(
-        "http://127.0.0.1:5000/api/cart",
-        { productId, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
+ const addToCart = async (product) => {
+  try {
+    // 1️⃣ جلب السلة الحالية من backend قبل أي إضافة
+    const res = await axios.get("http://127.0.0.1:5000/api/cart", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const currentItems = res.data.items || [];
+    const currentRestaurantId = currentItems.length > 0 
+      ? currentItems[0].product.restaurant._id 
+      : null;
+
+    // 2️⃣ التحقق من المطعم
+    if (currentRestaurantId && currentRestaurantId !== product.restaurant._id) {
+      setSnackMessage(
+        "⚠️ You cannot add products from a different restaurant. Please clear your cart first!"
       );
-      setSnackMessage("Cart updated!");
-      setSnackSeverity("success");
+      setSnackSeverity("warning");
       setSnackOpen(true);
-      fetchCart();
-    } catch (err) {
-      console.error("Error adding to cart:", err);
-      setSnackMessage("Failed to update cart.");
-      setSnackSeverity("error");
-      setSnackOpen(true);
+      return;
     }
-  };
+
+    // 3️⃣ إضافة المنتج
+    await axios.post(
+      "http://127.0.0.1:5000/api/cart",
+      { productId: product._id, quantity: 1 },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // 4️⃣ تحديث السلة من backend مباشرة
+    fetchCart();
+
+    setSnackMessage("Product added to cart!");
+    setSnackSeverity("success");
+    setSnackOpen(true);
+
+  } catch (err) {
+    console.error("Error adding to cart:", err.response || err);
+    setSnackMessage("Failed to add product to cart.");
+    setSnackSeverity("error");
+    setSnackOpen(true);
+  }
+};
+
 
   const updateQuantity = async (productId, newQty) => {
     if (newQty <= 0) {
@@ -186,17 +233,57 @@ const DisplayProduct = () => {
     setConfirmDialogOpen(false);
     setProductToRemove(null);
   };
+  const clearCart = async () => {
+  try {
+    await axios.delete("http://127.0.0.1:5000/api/cart", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSnackMessage("🗑️ Cart cleared successfully!");
+    setSnackSeverity("info");
+    setSnackOpen(true);
+    fetchCart(); // تحديث السلة بعد الحذف
+  } catch (err) {
+    console.error("Error clearing cart:", err);
+    setSnackMessage("Failed to clear cart.");
+    setSnackSeverity("error");
+    setSnackOpen(true);
+  }
+};
 
-  // تم تعديل هذه الدالة لتوجيه المستخدم لصفحة الكارت فقط
+
   const handleConfirmCart = () => {
     setSnackMessage(
       "✅ Your cart has been saved successfully! Please review your order in the Cart page before final confirmation."
     );
-    setSnackSeverity("info"); // رسالة info احترافية
+    setSnackSeverity("info");
     setSnackOpen(true);
   };
 
   const handleSnackClose = () => setSnackOpen(false);
+
+  // --- FILTER + SEARCH + SORT FOR ALL & SELECTED CATEGORY ---
+  const getProductsByCategory = () => {
+    const result = {};
+    Object.entries(products).forEach(([category, items]) => {
+      let filteredItems = items.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          p.price <= maxPrice
+      );
+
+      if (sortOrder === "asc") filteredItems.sort((a, b) => a.price - b.price);
+      else filteredItems.sort((a, b) => b.price - a.price);
+
+      if (filteredItems.length > 0) result[category] = filteredItems;
+    });
+
+    if (selectedCategory !== "All") {
+      return result[selectedCategory] ? { [selectedCategory]: result[selectedCategory] } : {};
+    }
+    return result;
+  };
+
+  const displayedProducts = getProductsByCategory();
 
   return (
     <Box sx={{ padding: 4 }}>
@@ -209,11 +296,10 @@ const DisplayProduct = () => {
           : "Choose a Restaurant"}
       </Typography>
 
-      {/* عرض المطاعم */}
       {!selectedRestaurant && (
-        <Grid container spacing={4}>
+        <Grid container spacing={4} justifyContent="center">
           {restaurants.map((rest) => (
-            <Grid item key={rest._id} xs={12} sm={6} md={4} lg={3}>
+            <Grid item key={rest._id} xs={12} sm={6} md={4} lg={4}>
               <StyledCard glowColor="#0ff" onClick={() => fetchProducts(rest._id)}>
                 <CardMedia
                   component="img"
@@ -237,35 +323,80 @@ const DisplayProduct = () => {
         </Grid>
       )}
 
-      {/* عرض المنتجات حسب الكاتيجوري */}
       {selectedRestaurant && (
         <>
-          <Button
-            variant="outlined"
-            sx={{ mb: 2 }}
-            onClick={() => setSelectedRestaurant(null)}
-          >
-            Back to Restaurants
+          <Button variant="outlined" sx={{ mb: 2 }} onClick={() => setSelectedRestaurant(null)}>
+            ⬅ Back to Restaurants
           </Button>
 
-          {Object.entries(products).map(([category, items]) => (
-            <Box key={category} sx={{ mb: 5 }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  mb: 2,
-                  fontWeight: "bold",
-                  borderBottom: "2px solid #1976d2",
-                  display: "inline-block",
-                }}
+          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap",justifyContent: "center", }}>
+            <TextField
+              label="Search"
+              variant="outlined"
+              size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Box sx={{ width: 200 }}>
+              <Typography variant="body2">Max Price: ${maxPrice}</Typography>
+              <Slider
+                value={maxPrice}
+                min={1}
+                max={200}
+                step={1}
+                onChange={(e, newVal) => setMaxPrice(newVal)}
+                valueLabelDisplay="auto"
+              />
+            </Box>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={selectedCategory}
+                label="Category"
+                onChange={(e) => setSelectedCategory(e.target.value)}
               >
+                <MenuItem value="All">All</MenuItem>
+                {Object.keys(products).map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={sortOrder}
+                label="Sort By"
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <MenuItem value="asc">Price (Low → High)</MenuItem>
+                <MenuItem value="desc">Price (High → Low)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {Object.entries(displayedProducts).map(([category, items]) => (
+            <Box key={category} sx={{ mb: 4 }}>
+              <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>
                 {category}
               </Typography>
-              <Grid container spacing={4}>
+              <Grid container spacing={4} justifyContent="center">
                 {items.map((product, index) => (
-                  <Grid item key={product._id} xs={12} sm={6} md={4} lg={3}>
-                    <Collapse in={true} timeout={400 + index * 100}>
-                      <StyledCard glowColor={neonColors[category] || "#ff4500"}>
+                  <Grid item key={product._id} xs={12} sm={6} md={4} lg={4}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <StyledCard glowColor={neonColors[product.category] || "#ff4500"}>
                         <CardMedia
                           component="img"
                           height="200"
@@ -285,13 +416,13 @@ const DisplayProduct = () => {
                             variant="contained"
                             color="primary"
                             fullWidth
-                            onClick={() => addToCart(product._id)}
+                            onClick={() => addToCart(product)}
                           >
                             Add to Cart
                           </StyledButton>
                         </CardContent>
                       </StyledCard>
-                    </Collapse>
+                    </motion.div>
                   </Grid>
                 ))}
               </Grid>
@@ -300,7 +431,7 @@ const DisplayProduct = () => {
         </>
       )}
 
-      {/* أيقونة Cart */}
+      {/* Cart Icon */}
       <IconButton
         onClick={() => {
           fetchCart();
@@ -315,20 +446,13 @@ const DisplayProduct = () => {
           "&:hover": { backgroundColor: "primary.dark" },
         }}
       >
-        <Badge
-          badgeContent={cart.reduce((acc, item) => acc + item.quantity, 0)}
-          color="error"
-        >
+        <Badge badgeContent={cart.reduce((acc, item) => acc + item.quantity, 0)} color="error">
           <ShoppingCartIcon />
         </Badge>
       </IconButton>
 
-      {/* Drawer */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      >
+      {/* Cart Drawer */}
+      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 350, p: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">Your Cart</Typography>
@@ -345,56 +469,30 @@ const DisplayProduct = () => {
                 key={item.product._id}
                 display="flex"
                 flexDirection="column"
-                sx={{
-                  mb: 2,
-                  p: 1,
-                  borderRadius: 2,
-                  border: "1px solid #eee",
-                }}
+                sx={{ mb: 2, p: 1, borderRadius: 2, border: "1px solid #eee" }}
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Typography variant="subtitle1">{item.product.name}</Typography>
-                  <Typography variant="subtitle1">
-                    ${item.product.price * item.quantity}
-                  </Typography>
+                  <Typography variant="subtitle1">${item.product.price * item.quantity}</Typography>
                 </Box>
-
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mt={1}
-                >
+                <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <IconButton
                       size="small"
-                      sx={{
-                        bgcolor: "error.light",
-                        color: "white",
-                        "&:hover": { bgcolor: "error.main" },
-                      }}
-                      onClick={() =>
-                        updateQuantity(item.product._id, item.quantity - 1)
-                      }
+                      sx={{ bgcolor: "error.light", color: "white", "&:hover": { bgcolor: "error.main" } }}
+                      onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
                     >
                       <RemoveIcon fontSize="small" />
                     </IconButton>
                     <Typography>{item.quantity}</Typography>
                     <IconButton
                       size="small"
-                      sx={{
-                        bgcolor: "success.light",
-                        color: "white",
-                        "&:hover": { bgcolor: "success.main" },
-                      }}
-                      onClick={() =>
-                        updateQuantity(item.product._id, item.quantity + 1)
-                      }
+                      sx={{ bgcolor: "success.light", color: "white", "&:hover": { bgcolor: "success.main" } }}
+                      onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
                     >
                       <AddIcon fontSize="small" />
                     </IconButton>
                   </Box>
-
                   <Button
                     size="small"
                     variant="outlined"
@@ -412,26 +510,26 @@ const DisplayProduct = () => {
           )}
           <Divider sx={{ my: 2 }} />
           <Typography variant="h6">
-            Total: $
-            {cart.reduce(
-              (acc, item) => acc + item.product.price * item.quantity,
-              0
-            )}
+            Total: ${cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)}
           </Typography>
-          {/* زر Confirm Order الجديد */}
-          <StyledButton
-            variant="contained"
-            color="success"
-            fullWidth
-            sx={{ mt: 2 }}
-            onClick={handleConfirmCart} // تم التغيير
-          >
+          <StyledButton variant="contained" color="success" fullWidth sx={{ mt: 2 }} onClick={handleConfirmCart}>
             Confirm Order
           </StyledButton>
+         <StyledButton
+  variant="outlined"
+  color="error"
+  fullWidth
+  sx={{ mt: 2 }}
+  onClick={() => setConfirmClearDialogOpen(true)}
+>
+  Clear Cart
+</StyledButton>
+
+
         </Box>
       </Drawer>
 
-      {/* Animated Confirm Dialog */}
+      {/* Confirm Dialog */}
       <Dialog
         open={confirmDialogOpen}
         TransitionComponent={Transition}
@@ -443,43 +541,62 @@ const DisplayProduct = () => {
           },
         }}
       >
-        <DialogTitle sx={{ bgcolor: "#f44336", color: "white" }}>
-          Confirm Removal
-        </DialogTitle>
+        <DialogTitle sx={{ bgcolor: "#f44336", color: "white" }}>Confirm Removal</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to remove this item from your cart?
-          </Typography>
+          <Typography>Are you sure you want to remove this item from your cart?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => setConfirmDialogOpen(false)}
-          >
+          <Button variant="outlined" color="primary" onClick={() => setConfirmDialogOpen(false)}>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => removeFromCart(productToRemove)}
-          >
+          <Button variant="contained" color="error" onClick={() => removeFromCart(productToRemove)}>
             Remove
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Confirm Clear Cart Dialog */}
+      <Dialog
+  open={confirmClearDialogOpen}
+  TransitionComponent={Transition}
+  keepMounted
+  onClose={() => setConfirmClearDialogOpen(false)}
+  sx={{
+    "& .MuiDialog-paper": {
+      animation: confirmClearDialogOpen ? `${shake} 0.5s` : "none",
+    },
+  }}
+>
+  <DialogTitle sx={{ bgcolor: "#f44336", color: "white" }}>Confirm Clear Cart</DialogTitle>
+  <DialogContent>
+    <Typography>Are you sure you want to clear your entire cart?</Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button variant="outlined" color="primary" onClick={() => setConfirmClearDialogOpen(false)}>
+      Cancel
+    </Button>
+    <Button
+      variant="contained"
+      color="error"
+      onClick={() => {
+        clearCart(); // دالة حذف الكارت
+        setConfirmClearDialogOpen(false);
+      }}
+    >
+      Clear Cart
+    </Button>
+  </DialogActions>
+</Dialog>
+
+
 
       {/* Snackbar */}
       <Snackbar
         open={snackOpen}
         autoHideDuration={4000}
         onClose={handleSnackClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleSnackClose}
-          severity={snackSeverity}
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={handleSnackClose} severity={snackSeverity} sx={{ width: "100%" }}>
           {snackMessage}
         </Alert>
       </Snackbar>

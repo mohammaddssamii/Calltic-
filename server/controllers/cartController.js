@@ -143,3 +143,13 @@ exports.updateQuantity = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+exports.clearCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await Cart.deleteMany({ user: userId });
+    res.status(200).json({ message: "Cart cleared" });
+  } catch (err) {
+    console.error("clearCart:", err);
+    res.status(500).json({ message: "Failed to clear cart" });
+  }
+};

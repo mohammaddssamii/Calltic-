@@ -98,6 +98,8 @@ export default function Cart() {
   const [fulfillment, setFulfillment] = useState("pickup"); // 'pickup' or 'delivery'
   const [pickupType, setPickupType] = useState("dine-in"); // 'dine-in' or 'takeaway'
   const [region, setRegion] = useState(""); // used if delivery
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+
 
   // Jordan governorates (manual list per request)
   const [regionsList] = useState([
@@ -119,6 +121,8 @@ export default function Cart() {
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackCfg, setSnackCfg] = useState({ severity: "success", message: "" });
   const [loading, setLoading] = useState(false);
+  const [clearCartDialogOpen, setClearCartDialogOpen] = useState(false);
+
 
   const token = localStorage.getItem("token");
 
@@ -238,14 +242,18 @@ export default function Cart() {
       showSnack("error", "Please enter customer name and phone before confirming.");
       return;
     }
-    // simple phone validation: at least 6 digits (adjust as needed)
+    // simple phone validation: at least 10 digits (adjust as needed)
     const digits = customerPhone.replace(/\D/g, "");
-    if (digits.length < 6) {
+    if (digits.length < 10) {
       showSnack("error", "Please enter a valid phone number.");
       return;
     }
     if (fulfillment === "delivery" && !region) {
       showSnack("error", "Please select a delivery region.");
+      return;
+    }
+    if (fulfillment === "delivery" && !deliveryAddress.trim()) {
+      showSnack("error", "Please enter a delivery address.");
       return;
     }
     if (cartItems.length === 0) {
@@ -265,11 +273,12 @@ export default function Cart() {
     const payload = {
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
+      deliveryAddress: deliveryAddress.trim(),
       items: cartItems.map((it) => ({ productId: it.product._id, quantity: it.quantity })),
       notes: notes.trim(),
       fulfillment, // pickup or delivery
-      pickupType: fulfillment === "pickup" ? pickupType : undefined,
-      region: fulfillment === "delivery" ? region : undefined,
+      pickupType: fulfillment === "pickup" ? pickupType : null,
+      region: fulfillment === "delivery" ? region : null,
       subtotal,
       tax,
       deliveryFee, // zero in this implementation per request
@@ -487,7 +496,8 @@ export default function Cart() {
                     size="small"
                     sx={{ mb: 2 }}
                     placeholder="Street, building, floor, any landmark..."
-                    onChange={() => {}}
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
                     // note: per request the exact address is entered on the cart page manually — you can bind it to state if you want it saved.
                   />
                   <Typography variant="caption" color="text.secondary">
@@ -542,6 +552,18 @@ export default function Cart() {
               >
                 Confirm Order
               </Button>
+              <Button
+  variant="outlined"
+  color="error"
+  fullWidth
+  startIcon={<DeleteOutlineIcon />}
+  sx={{ mt: 1 }} // أو mb:1 حسب التصميم
+  onClick={() => setClearCartDialogOpen(true)}
+  disabled={cartItems.length === 0} // optional: تعطيله إذا الكارت فاضي
+>
+  Clear Cart
+</Button>
+
 
               {/* Removed Continue Shopping button */}
             </Card>
@@ -672,6 +694,46 @@ export default function Cart() {
             {snackCfg.message}
           </Alert>
         </Snackbar>
+        {/* Clear Cart Confirmation Dialog */}
+        <Dialog
+  open={clearCartDialogOpen}
+  onClose={() => setClearCartDialogOpen(false)}
+  TransitionComponent={Transition}
+>
+  <DialogTitle sx={{ bgcolor: "error.main", color: "white" }}>Clear Cart</DialogTitle>
+  <DialogContent>
+    <Typography>
+      Are you sure you want to remove all items from your cart? This action cannot be undone.
+    </Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setClearCartDialogOpen(false)}>Cancel</Button>
+    <Button
+      variant="contained"
+      color="error"
+      startIcon={<DeleteOutlineIcon />}
+      onClick={async () => {
+        try {
+          setLoading(true);
+          await axios.delete("http://127.0.0.1:5000/api/cart", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setCartItems([]);
+          showSnack("info", "All items have been removed from your cart.");
+        } catch (err) {
+          console.error("clearCart:", err);
+          showSnack("error", "Failed to clear cart. Please try again.");
+        } finally {
+          setLoading(false);
+          setClearCartDialogOpen(false);
+        }
+      }}
+    >
+      Clear All
+    </Button>
+  </DialogActions>
+</Dialog>
+
       </Box>
     </motion.div>
   );
