@@ -122,7 +122,7 @@ function SidebarFooter({ mini }) {
       variant="caption"
       sx={{ m: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}
     >
-      {mini ? '©LIGHTIC' : `© ${new Date().getFullYear()} Made with love by LIGHTIC`}
+      {mini ? '©CALLTIC' : `© ${new Date().getFullYear()} Made with love by CALLTIC`}
     </Typography>
   );
 }
@@ -135,8 +135,8 @@ function CustomAppTitle() {
   return (
     <Stack direction="row" alignItems="center" spacing={2}>
       <CloudCircleIcon fontSize="large" color="primary" />
-      <Typography variant="h6">MY APP</Typography>
-      <Chip size="small" label="LIGHTIC" color="info" />
+      <Typography variant="h6">CALLTIC</Typography>
+      <Chip size="small" label="BETA" color="info" />
       <Tooltip title="Connected to production">
         <CheckCircleIcon color="success" fontSize="small" />
       </Tooltip>
