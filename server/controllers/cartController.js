@@ -153,3 +153,39 @@ exports.clearCart = async (req, res) => {
     res.status(500).json({ message: "Failed to clear cart" });
   }
 };
+// ===== Update note for a cart item =====
+exports.updateNote = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { note } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product ID format" });
+    }
+
+    const userCart = await Cart.findOne({ user: req.user.id });
+    if (!userCart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    const item = userCart.items.find(i => i.product.equals(productId));
+    if (!item) {
+      return res.status(404).json({ message: "Product not in cart" });
+    }
+
+    item.note = note;
+    await userCart.save();
+
+    // Populate بعد التعديل
+    const populatedCart = await userCart.populate({
+      path: "items.product",
+      populate: ["category", "restaurant"],
+    });
+
+    res.status(200).json({ message: "Note updated", cart: populatedCart });
+  } catch (error) {
+    console.error("Error updating note:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+

@@ -505,6 +505,29 @@ const DisplayProduct = () => {
                     Remove
                   </Button>
                 </Box>
+                 {/* 👇 ضيف الـ TextField هون */}
+    <TextField
+      label="Add a note"
+      variant="outlined"
+      size="small"
+      fullWidth
+      value={item.note || ""}
+      onChange={(e) => {
+        const newNote = e.target.value;
+        setCart((prevCart) =>
+          prevCart.map((c) =>
+            c.product._id === item.product._id ? { ...c, note: newNote } : c
+          )
+        );
+
+        axios.put(
+          `http://127.0.0.1:5000/api/cart/${item.product._id}/note`,
+          { note: newNote },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch((err) => console.error("Error saving note:", err));
+      }}
+      sx={{ mt: 1 }}
+    />
               </Box>
             ))
           )}

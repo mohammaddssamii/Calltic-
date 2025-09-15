@@ -358,6 +358,37 @@ export default function Cart() {
                         <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.dark" }}>
                           {lineText(it.product.price, it.quantity)}
                         </Typography>
+                        {/* 👇 TextField خاص بملاحظات المنتج */}
+        <TextField
+          label="Note"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={it.note || ""} // خزن note لكل منتج
+          onChange={(e) => {
+            const val = e.target.value;
+            setCartItems((prev) =>
+              prev.map((x) =>
+                x.product._id === it.product._id ? { ...x, note: val } : x
+              )
+            );
+          }}
+          onBlur={async () => {
+            try {
+              await axios.put(
+                `http://127.0.0.1:5000/api/cart/${it.product._id}/note`,
+                { note: it.note || "" },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              fetchCart(); // رجع الكارت بعد التحديث
+            } catch (err) {
+              console.error("Error saving note:", err);
+              showSnack("error", "Failed to save note.");
+            }
+          }}
+          sx={{ mt: 1 }}
+        />
+    
 
                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 1 }}>
                           <Stack direction="row" alignItems="center" spacing={1}>
@@ -612,16 +643,25 @@ export default function Cart() {
                 : `Pickup · ${pickupType === "dine-in" ? "Dine In" : "Takeaway"}`}
             </Typography>
 
-            <Stack spacing={1} sx={{ mb: 2 }}>
-              {cartItems.map((it) => (
-                <Box key={it.product._id} sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography>
-                    {it.product.name} × {it.quantity}
-                  </Typography>
-                  <Typography>{formatCurrency(it.product.price * it.quantity)}</Typography>
-                </Box>
-              ))}
-            </Stack>
+          <Stack spacing={1} sx={{ mb: 2 }}>
+  {cartItems.map((it) => (
+    <Box key={it.product._id} sx={{ display: "flex", flexDirection: "column", mb: 1 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography>
+          {it.product.name} × {it.quantity}
+        </Typography>
+        <Typography>{formatCurrency(it.product.price * it.quantity)}</Typography>
+      </Box>
+      {/* 👇 عرض النوت إذا موجود */}
+      {it.note && (
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", ml: 1 }}>
+          Note: {it.note}
+        </Typography>
+      )}
+    </Box>
+  ))}
+</Stack>
+
 
             <Divider sx={{ my: 1 }} />
 
