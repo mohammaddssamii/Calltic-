@@ -12,10 +12,18 @@ import {
   Stack,
   Snackbar,
   Alert,
+  CircularProgress,
+  Backdrop,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { motion } from "framer-motion";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 const RestaurantPage = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -24,15 +32,21 @@ const RestaurantPage = () => {
   const [editingId, setEditingId] = useState(null);
 
   const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
+  const [loading, setLoading] = useState(false);
+
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, id: null });
 
   const token = localStorage.getItem("token");
 
   const fetchRestaurants = async () => {
     try {
+      setLoading(true);
       const res = await axios.get("http://127.0.0.1:5000/api/restaurants");
       setRestaurants(res.data);
+      setLoading(false);
     } catch (err) {
       console.error(err);
+      setLoading(false);
       showSnack("Error fetching restaurants", "error");
     }
   };
@@ -45,17 +59,13 @@ const RestaurantPage = () => {
     setSnack({ open: true, message, severity });
   };
 
-  const handleSnackClose = () => {
-    setSnack({ ...snack, open: false });
-  };
-
+  const handleSnackClose = () => setSnack({ ...snack, open: false });
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const handleImage = (e) => setImage(e.target.files[0]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) return showSnack("No token provided", "error");
-
     if (!form.name || !form.address || !form.phoneNumber || !form.description) {
       return showSnack("Please fill in all fields!", "error");
     }
@@ -64,40 +74,34 @@ const RestaurantPage = () => {
       (r) => r.name.toLowerCase() === form.name.trim().toLowerCase() && r._id !== editingId
     );
     if (nameExists) return showSnack("Restaurant name already exists!", "error");
-
     if (!editingId && !image) return showSnack("Please select an image for the restaurant!", "error");
 
     try {
+      setLoading(true);
       const formData = new FormData();
       Object.keys(form).forEach((key) => formData.append(key, form[key]));
       if (image) formData.append("image", image);
 
       if (editingId) {
-        await axios.put(
-          `http://127.0.0.1:5000/api/restaurants/${editingId}`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
-          }
-        );
+        await axios.put(`http://127.0.0.1:5000/api/restaurants/${editingId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
+        });
         setEditingId(null);
         showSnack("Restaurant updated successfully!");
       } else {
-        await axios.post(
-          "http://127.0.0.1:5000/api/restaurants",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
-          }
-        );
+        await axios.post("http://127.0.0.1:5000/api/restaurants", formData, {
+          headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
+        });
         showSnack("Restaurant added successfully!");
       }
 
       setForm({ name: "", address: "", phoneNumber: "", description: "" });
       setImage(null);
       fetchRestaurants();
+      setLoading(false);
     } catch (err) {
       console.error(err);
+      setLoading(false);
       showSnack("Error saving restaurant", "error");
     }
   };
@@ -112,18 +116,24 @@ const RestaurantPage = () => {
     setEditingId(restaurant._id);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this restaurant?")) return;
-    if (!token) return showSnack("No token provided", "error");
+  const handleDeleteDialogOpen = (id) => setDeleteDialog({ open: true, id });
+  const handleDeleteDialogClose = () => setDeleteDialog({ open: false, id: null });
 
+  const handleDelete = async () => {
+    if (!token) return showSnack("No token provided", "error");
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/restaurants/${id}`, {
+      setLoading(true);
+      await axios.delete(`http://127.0.0.1:5000/api/restaurants/${deleteDialog.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchRestaurants();
+      setLoading(false);
+      handleDeleteDialogClose();
       showSnack("Restaurant deleted successfully!");
     } catch (err) {
       console.error(err);
+      setLoading(false);
+      handleDeleteDialogClose();
       showSnack("Error deleting restaurant", "error");
     }
   };
@@ -138,11 +148,7 @@ const RestaurantPage = () => {
       headerName: "Image",
       flex: 0.5,
       renderCell: (params) =>
-        params.value ? (
-          <Avatar src={`http://127.0.0.1:5000/uploads/${params.value}`} variant="rounded" />
-        ) : (
-          "N/A"
-        ),
+        params.value ? <Avatar src={`http://127.0.0.1:5000/uploads/${params.value}`} variant="rounded" /> : "N/A",
     },
     {
       field: "actions",
@@ -153,7 +159,7 @@ const RestaurantPage = () => {
           <IconButton color="primary" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
-          <IconButton color="error" onClick={() => handleDelete(params.row._id)}>
+          <IconButton color="error" onClick={() => handleDeleteDialogOpen(params.row._id)}>
             <DeleteIcon />
           </IconButton>
         </Stack>
@@ -196,14 +202,54 @@ const RestaurantPage = () => {
         All Restaurants
       </Typography>
       <div style={{ height: 500, width: "100%" }}>
-        <DataGrid rows={restaurants} columns={columns} getRowId={(row) => row._id} pageSize={7} />
+        <DataGrid
+          rows={restaurants.map((r, i) => ({ ...r, animationDelay: i * 0.1 }))}
+          columns={columns}
+          getRowId={(row) => row._id}
+          pageSize={7}
+          components={{
+            Row: (props) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: props.row.animationDelay }}
+              >
+                <div>{props.children}</div>
+              </motion.div>
+            ),
+          }}
+        />
       </div>
 
+      {/* Snackbar */}
       <Snackbar open={snack.open} autoHideDuration={4000} onClose={handleSnackClose}>
         <Alert onClose={handleSnackClose} severity={snack.severity} sx={{ width: "100%" }}>
           {snack.message}
         </Alert>
       </Snackbar>
+
+      {/* Loading Spinner */}
+      <Backdrop open={loading} sx={{ color: "#fff", zIndex: 9999 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      {/* Styled Delete Dialog */}
+      <Dialog open={deleteDialog.open} onClose={handleDeleteDialogClose}>
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1, color: "#d32f2f" }}>
+          <WarningAmberIcon /> Confirm Delete
+        </DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this restaurant?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose} color="primary" variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
