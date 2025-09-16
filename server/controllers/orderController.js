@@ -39,7 +39,8 @@ exports.placeOrder = async (req, res) => {
       notes: notes || '',
       items: validItems.map(item => ({
         product: item.product._id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        note: item.note || ''
       })),
       total,
       status: 'completed'

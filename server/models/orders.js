@@ -11,8 +11,9 @@ const orderSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-    quantity: { type: Number, required: true, min: 1 }
-}],
+    quantity: { type: Number, required: true, min: 1 },
+    note: { type: String, default: '' }
+  }],
   total: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'completed', 'cancelled'], default: 'pending' }
 }, { timestamps: true });

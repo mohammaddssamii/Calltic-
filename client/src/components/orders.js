@@ -203,6 +203,12 @@ const Orders = () => {
                               <Typography variant="body2">
                                 Price: ${item.product.price} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
                               </Typography>
+                                {/* 👇 عرض النوت الخاصة بالمنتج إذا موجودة */}
+            {item.note && (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", mt: 0.5 }}>
+                Note: {item.note}
+              </Typography>
+            )}
                             </Paper>
                           </motion.div>
                         </Grid>
