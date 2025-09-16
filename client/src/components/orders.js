@@ -123,7 +123,7 @@ const Orders = () => {
                           <TableCell sx={{ maxWidth: 150, overflowX: "auto", whiteSpace: "nowrap" }}>
                             {formatFulfillment(order)}
                           </TableCell>
-                          <TableCell>${order.total}</TableCell>
+                          <TableCell>{order.total} JOD</TableCell>
                           <TableCell>{new Date(order.createdAt).toLocaleString()}</TableCell>
                           <TableCell>
                             <Chip
@@ -201,7 +201,7 @@ const Orders = () => {
                               <Typography fontWeight="bold">{item.product.name}</Typography>
                               <Typography variant="body2">Qty: {item.quantity}</Typography>
                               <Typography variant="body2">
-                                Price: ${item.product.price} × {item.quantity} = ${(item.product.price * item.quantity).toFixed(2)}
+                                Price: {item.product.price} JOD × {item.quantity} = {(item.product.price * item.quantity).toFixed(2)} JOD
                               </Typography>
                                 {/* 👇 عرض النوت الخاصة بالمنتج إذا موجودة */}
             {item.note && (
@@ -219,7 +219,7 @@ const Orders = () => {
                   )}
 
                   <Divider sx={{ my: 1 }} />
-                  <Typography><strong>Total:</strong> ${selectedOrder.total}</Typography>
+                  <Typography><strong>Total:</strong> {selectedOrder.total} JOD </Typography>
                   <Typography><strong>Date & Time:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</Typography>
                 </Stack>
               </motion.div>

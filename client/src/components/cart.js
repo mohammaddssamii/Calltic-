@@ -147,8 +147,13 @@ export default function Cart() {
   };
 
   // handy currency formatter
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+ const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-JO", {
+    style: "currency",
+    currency: "JOD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 
   // memoized totals
   const subtotal = useMemo(

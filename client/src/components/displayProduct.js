@@ -473,7 +473,7 @@ const DisplayProduct = () => {
               >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Typography variant="subtitle1">{item.product.name}</Typography>
-                  <Typography variant="subtitle1">JOD {item.product.price * item.quantity}</Typography>
+                  <Typography variant="subtitle1"> {item.product.price * item.quantity} JOD </Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
                   <Box display="flex" alignItems="center" gap={1}>
@@ -533,7 +533,7 @@ const DisplayProduct = () => {
           )}
           <Divider sx={{ my: 2 }} />
           <Typography variant="h6">
-            Total: JOD {cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)}
+            Total:  {cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)} JOD
           </Typography>
           <StyledButton variant="contained" color="success" fullWidth sx={{ mt: 2 }} onClick={handleConfirmCart}>
             Confirm Order
