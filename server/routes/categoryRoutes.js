@@ -8,5 +8,7 @@ router.get('/', categoryController.getAllCategories);
 router.get('/:id', categoryController.getCategoryById);
 router.put('/:id', adminAuth, categoryController.updateCategory);
 router.delete('/:id', adminAuth, categoryController.deleteCategory);
+router.patch('/:id/toggle-with-products', adminAuth, categoryController.toggleCategoryWithProducts);
+
 
 module.exports = router;

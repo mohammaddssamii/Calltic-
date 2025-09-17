@@ -280,6 +280,61 @@ const toggleAvailability = async (productId) => {
   }
 };
 
+const toggleCategoryAvailability = async (categoryId) => {
+  try {
+    const res = await axios.patch(
+      `http://127.0.0.1:5000/api/categories/${categoryId}/toggle-with-products`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // تحديث المنتجات في الـ state بناءً على الحالة الجديدة
+    const updatedProducts = { ...products };
+    Object.keys(updatedProducts).forEach((catName) => {
+      updatedProducts[catName] = updatedProducts[catName].map(p =>
+        p.category._id === categoryId ? { ...p, available: res.data.available } : p
+      );
+    });
+    setProducts(updatedProducts);
+
+    setSnackMessage("Category and its products updated!");
+    setSnackSeverity("success");
+    setSnackOpen(true);
+  } catch (err) {
+    console.error("Error toggling category:", err);
+    setSnackMessage("Failed to update category.");
+    setSnackSeverity("error");
+    setSnackOpen(true);
+  }
+};
+const handleToggleCategory = async (categoryId, categoryName) => {
+  try {
+    const res = await axios.patch(
+      `http://127.0.0.1:5000/api/categories/${categoryId}/toggle-with-products`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const updatedProducts = { ...products };
+    updatedProducts[categoryName] = updatedProducts[categoryName].map(p => ({
+      ...p,
+      available: res.data.available
+    }));
+    setProducts(updatedProducts);
+
+    setSnackMessage(`Category "${categoryName}" updated!`);
+    setSnackSeverity("success");
+    setSnackOpen(true);
+  } catch (err) {
+    console.error(err);
+    setSnackMessage("Failed to update category.");
+    setSnackSeverity("error");
+    setSnackOpen(true);
+  }
+};
+
+
+
 
   const handleConfirmCart = () => {
     setSnackMessage(
@@ -415,6 +470,19 @@ const toggleAvailability = async (productId) => {
 
           {Object.entries(displayedProducts).map(([category, items]) => (
             <Box key={category} sx={{ mb: 4 }}>
+       {isAdmin && (
+ <Button
+  variant="outlined"
+  color={items.every(p => p.available) ? "error" : "success"}
+  sx={{ mb: 2 }}
+  onClick={() => handleToggleCategory(items[0].category._id, category)}
+>
+  {items.every(p => p.available) ? `Disable ${category}` : `Enable ${category}`}
+</Button>
+
+)}
+
+
               <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>
                 {category}
               </Typography>

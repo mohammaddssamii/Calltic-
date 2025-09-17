@@ -190,6 +190,34 @@ export function Category() {
                     >
                       Delete
                     </Button>
+             <Button
+  size="small"
+  variant="outlined"
+  color={category.available ? "error" : "success"}
+  onClick={async () => {
+    try {
+      const res = await axios.patch(
+        `http://127.0.0.1:5000/api/categories/${category._id}/toggle-with-products`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+     setCategories(categories.map(c =>
+  c._id === category._id ? { ...c, available: res.data.available } : c
+));
+
+      showSnack("Category and its products updated!");
+    } catch (err) {
+      console.error("Full error:", err.response?.data || err.message || err);
+      const serverMessage = err.response?.data?.message || "Failed to update category with products";
+      showSnack(serverMessage, "error");
+    }
+  }}
+>
+  {category.available ? "Disable All" : "Enable All"}
+</Button>
+
+
+
                   </Stack>
                 </Paper>
               </motion.div>
