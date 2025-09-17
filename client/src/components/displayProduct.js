@@ -69,6 +69,8 @@ const StyledCard = styled(Card)(({ glowColor }) => ({
   borderRadius: 16,
   display: "flex",
   flexDirection: "column",
+   // maxWidth: 300,          // ضبط أقصى عرض
+  //minHeight: 300,        // ضبط الحد الأدنى للارتفاع
   "&:hover": {
     transform: "translateY(-5px)",
     animation: `${neonGlow(glowColor)} 1.5s infinite`,
@@ -102,6 +104,17 @@ const DisplayProduct = () => {
   const [maxPrice, setMaxPrice] = useState(100);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const payload = JSON.parse(atob(token.split(".")[1])); // JWT decode
+    setIsAdmin(payload.role === "admin");
+  }
+}, []);
+
 
   const token = localStorage.getItem("token");
 
@@ -245,6 +258,23 @@ const DisplayProduct = () => {
   } catch (err) {
     console.error("Error clearing cart:", err);
     setSnackMessage("Failed to clear cart.");
+    setSnackSeverity("error");
+    setSnackOpen(true);
+  }
+};
+
+const toggleAvailability = async (productId) => {
+  try {
+    await axios.patch(
+      `http://127.0.0.1:5000/api/products/${productId}/toggle`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    // إعادة تحميل المنتجات بعد التغيير
+    if (selectedRestaurant) fetchProducts(selectedRestaurant._id);
+  } catch (err) {
+    console.error("Error toggling availability:", err);
+    setSnackMessage("Failed to update product availability.");
     setSnackSeverity("error");
     setSnackOpen(true);
   }
@@ -417,9 +447,22 @@ const DisplayProduct = () => {
                             color="primary"
                             fullWidth
                             onClick={() => addToCart(product)}
+                             disabled={!product.available}
                           >
-                            Add to Cart
+                            {product.available ? "Add to Cart" : "Out of Stock"}
                           </StyledButton>
+                           {/* زر التغيير للأدمن */}
+  {isAdmin && (
+    <StyledButton
+      variant="outlined"
+      color={product.available ? "error" : "success"}
+      fullWidth
+      onClick={() => toggleAvailability(product._id)}
+      sx={{ mt: 1 }} // مسافة بسيطة فوق الزر
+    >
+      {product.available ? "Disable" : "Enable"}
+    </StyledButton>
+  )}
                         </CardContent>
                       </StyledCard>
                     </motion.div>

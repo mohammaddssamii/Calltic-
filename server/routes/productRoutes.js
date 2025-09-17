@@ -24,6 +24,8 @@ router.post('/', adminAuth, upload.single('image'), productController.createProd
 // Get all products
 router.get('/', productController.getAllProducts);
 
+
+
 // Get products by restaurant (must be before /:id to avoid conflict)
 router.get('/restaurant/:restaurantId', productController.getProductsByRestaurant);
 
@@ -35,5 +37,10 @@ router.put('/:id', adminAuth, upload.single('image'), productController.updatePr
 
 // Delete a product (Admin only, with check for existing orders)
 router.delete('/:id', adminAuth, productController.deleteProduct);
+
+// routes/productRoutes.js
+// Toggle product availability (Admin only)
+router.patch('/:id/toggle', adminAuth, productController.toggleAvailability);
+
 
 module.exports = router;

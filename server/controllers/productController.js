@@ -7,7 +7,7 @@ const Order = require('../models/orders'); // لاستعماله عند الحذ
 // Create a new product
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, restaurant } = req.body;
+    const { name, description, price, category, restaurant, available } = req.body;
 
     if (!restaurant) {
       return res.status(400).json({ message: 'Restaurant is required' });
@@ -31,6 +31,7 @@ exports.createProduct = async (req, res) => {
       category,
       restaurant,
       image,
+      available: available !== undefined ? available : true,
     });
 
     const saved = await newProduct.save();
@@ -82,8 +83,12 @@ exports.getProductById = async (req, res) => {
 // Update product
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, restaurant } = req.body;
+    const { name, description, price, category, restaurant, available } = req.body;
     const updateData = { name, description, price, category, restaurant };
+
+    if (available !== undefined) {
+      updateData.available = available;
+    }
 
     if (restaurant) {
       if (!mongoose.Types.ObjectId.isValid(restaurant)) {
@@ -128,6 +133,23 @@ exports.deleteProduct = async (req, res) => {
     if (!deleted) return res.status(404).json({ message: 'Product not found' });
 
     res.status(200).json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+// controllers/productController.js
+exports.toggleAvailability = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    product.available = !product.available; // 👈 يقلب الحالة
+    await product.save();
+
+    res.status(200).json({
+      message: `Product is now ${product.available ? "Available" : "Unavailable"}`,
+      product,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

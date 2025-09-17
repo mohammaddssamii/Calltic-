@@ -7,7 +7,8 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   quantity: { type: Number },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true }
+   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
+    available: { type: Boolean, default: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
