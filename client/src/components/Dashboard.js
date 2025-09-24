@@ -35,10 +35,12 @@ import AdminDashboard from './managment';
 
 
 const demoTheme = createTheme({
+  palette: {
+    mode: 'dark', // هنا نخلي الداكن دائمًا
+  },
   cssVariables: {
     colorSchemeSelector: 'data-toolpad-color-scheme',
   },
-  colorSchemes: { light: true, dark: true },
   breakpoints: {
     values: {
       xs: 0,
@@ -49,6 +51,7 @@ const demoTheme = createTheme({
     },
   },
 });
+
 
 function DemoPageContent({ pathname, profileData }) {
   return (
@@ -97,15 +100,8 @@ DemoPageContent.propTypes = {
 };
 
 function ToolbarActionsSearch({ onLogout }) {
-  return (
+   return (
     <Stack direction="row" spacing={1} alignItems="center">
-      <TextField
-        label="Search"
-        variant="outlined"
-        size="small"
-        sx={{ display: { xs: 'none', md: 'inline-block' }, mr: 1 }}
-      />
-      <ThemeSwitcher />
       <Account />
       <Tooltip title="Logout">
         <Button variant="outlined" color="error" onClick={onLogout}>
