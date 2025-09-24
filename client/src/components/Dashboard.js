@@ -31,6 +31,7 @@ import DisplayProduct from './displayProduct';
 import Cart from './cart';
 import  Order  from './orders';
 import RestaurantPage from './resturant';
+import AdminDashboard from './managment';
 
 
 const demoTheme = createTheme({
@@ -81,6 +82,9 @@ function DemoPageContent({ pathname, profileData }) {
       )}
       {pathname === '/restaurant' && (
        <RestaurantPage />
+      )}
+      {pathname === '/admin' && (
+       <AdminDashboard />
       )}
       <Typography variant="body1">Current page: {pathname}</Typography>
       
@@ -150,16 +154,31 @@ function DashboardLayoutSlots(props) {
     const [profileData, setProfileData] = useState({});
     const [isAdmin, setIsAdmin] = useState(false);
 
+   const handleLogout = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    await axios.post('http://127.0.0.1:5000/api/users/logout', {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    localStorage.removeItem('token');
+    onLogout(); // تحديث state في App
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
+};
+
+
+
+
+
 const NAVIGATION = [
   {
     kind: 'header',
     title: 'Main items',
   },
-  {
-    segment: 'dashboard',
-    title: 'Dashboard',
-    icon: <DashboardIcon />,
-  },
+  
   {
     segment: 'DisplayProduct',
     title: 'Display Product',
@@ -195,6 +214,10 @@ const NAVIGATION = [
     title: 'Restaurant',
     icon: <CategoryIcon />,
   },
+  {segment: 'admin',
+    title: 'Admin Dashboard',
+    icon: <CategoryIcon />,
+  }
   ]:[]), // Only show this item if the user is an admin
   
 ];
@@ -225,7 +248,7 @@ const NAVIGATION = [
     }, []);
   const { window, onLogout } = props;
 
-  const router = useDemoRouter('/dashboard');
+  const router = useDemoRouter('/DisplayProduct');
 
   const demoWindow = window !== undefined ? window() : undefined;
 
@@ -240,7 +263,7 @@ const NAVIGATION = [
         <DashboardLayout
           slots={{
             appTitle: CustomAppTitle,
-            toolbarActions: () => <ToolbarActionsSearch onLogout={onLogout} />,
+            toolbarActions: () => <ToolbarActionsSearch onLogout={handleLogout} />,
             sidebarFooter: SidebarFooter,
           }}
         >

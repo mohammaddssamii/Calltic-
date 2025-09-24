@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String },
   address: { type: String },
   phoneNumber: { type: String },
-  role: { type: String, enum: ['user', 'admin'], default: 'admin' }
+  role: { type: String, enum: ['user', 'admin'], default: 'admin' },
+  isOnline: { type: Boolean, default: false },
+  lastLogin: { type: Date, default: null },
+  totalOnlineTime: { type: Number, default: 0 }
 }, { timestamps: true });
 
 

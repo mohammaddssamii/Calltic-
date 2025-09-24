@@ -3,6 +3,7 @@ const router = express.Router();
 
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleWare');
+const authAdmin = require('../middleware/adminAuth');
 
 const multer = require("multer");
 
@@ -30,5 +31,11 @@ router.get('/profile', authMiddleware, userController.getProfile);
 router.put('/update', authMiddleware, upload.single('profileImage'), userController.updateUser);
 
 router.post('/change-password', authMiddleware, userController.changePassword);
+
+router.post('/logout', authMiddleware, userController.logout);
+
+router.put('/change-role', authMiddleware, authAdmin, userController.changeUserRole);
+
+router.post('/save-online-times', authMiddleware, userController.saveOnlineTimes);
 
 module.exports = router;

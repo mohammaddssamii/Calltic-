@@ -45,6 +45,10 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
 
+    user.isOnline = true;
+    user.lastLogin = new Date();
+    await user.save();
+
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -110,3 +114,59 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// controllers/userController.js
+exports.changeUserRole = async (req, res) => {
+  try {
+    const { userId, role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    res.json({ message: 'Role updated', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating role' });
+  }
+};
+// controllers/userController.js
+exports.logout = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.isOnline && user.lastLogin) {
+      const minutesOnline = Math.floor((new Date() - user.lastLogin) / 60000);
+      user.totalOnlineTime += minutesOnline;
+    }
+
+    user.isOnline = false;
+    user.lastLogin = null;
+    await user.save();
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+// controllers/userController.js
+exports.saveOnlineTimes = async (req, res) => {
+  try {
+    const { onlineTimes } = req.body; // { userId1: seconds1, userId2: seconds2, ... }
+
+    const updatePromises = Object.keys(onlineTimes).map(userId =>
+      User.findByIdAndUpdate(userId, { totalOnlineTime: onlineTimes[userId] })
+    );
+
+    await Promise.all(updatePromises);
+    res.json({ message: 'Online times saved successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to save online times', error: err.message });
+  }
+};
