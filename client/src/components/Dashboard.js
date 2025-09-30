@@ -150,20 +150,7 @@ function DashboardLayoutSlots(props) {
     const [profileData, setProfileData] = useState({});
     const [isAdmin, setIsAdmin] = useState(false);
 
-   const handleLogout = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) return;
-
-  try {
-    await axios.post('http://127.0.0.1:5000/api/users/logout', {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    localStorage.removeItem('token');
-    onLogout(); // تحديث state في App
-  } catch (error) {
-    console.error('Logout failed:', error);
-  }
-};
+  
 
 
 
@@ -256,13 +243,14 @@ const NAVIGATION = [
         theme={demoTheme}
         window={demoWindow}
       >
-        <DashboardLayout
-          slots={{
-            appTitle: CustomAppTitle,
-            toolbarActions: () => <ToolbarActionsSearch onLogout={handleLogout} />,
-            sidebarFooter: SidebarFooter,
-          }}
-        >
+       <DashboardLayout
+  slots={{
+    appTitle: CustomAppTitle,
+    toolbarActions: () => <ToolbarActionsSearch onLogout={props.onLogout} />,
+    sidebarFooter: SidebarFooter,
+  }}
+>
+
             {profileData.role ? (
                 <p>Welcome {profileData.role ? profileData.role : 'not found '} </p>
             ) : (
