@@ -10,7 +10,7 @@ function Login({ onLogin, switchToRegister }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/users/login', { email, password });
+      const res = await axios.post('http://127.0.0.1:5000/api/users/login', { email, password });
       const { token, user } = res.data;
       localStorage.setItem('token', token);
       onLogin(user);

@@ -89,7 +89,7 @@ const AdminDashboard = () => {
             <CardContent> 
               <Typography variant="h6">Total Sales</Typography> 
               <Typography variant="h4"> 
-                ${stats.ordersByRestaurant.reduce((acc, r) => acc + r.totalSales, 0).toFixed(2)} 
+                JD{stats.ordersByRestaurant.reduce((acc, r) => acc + r.totalSales, 0).toFixed(2)} 
               </Typography> 
             </CardContent> 
           </Card> 
