@@ -61,9 +61,9 @@ const ProductPage = () => {
     const fetchData = async () => {
       try {
         const [resProducts, resCategories, resRestaurants] = await Promise.all([
-          axios.get("http://127.0.0.1:5000/api/products"),
-          axios.get("http://127.0.0.1:5000/api/categories"),
-          axios.get("http://127.0.0.1:5000/api/restaurants"),
+          axios.get("https://calltic.onrender.com/api/products"),
+          axios.get("https://calltic.onrender.com/api/categories"),
+          axios.get("https://calltic.onrender.com/api/restaurants"),
         ]);
 
         const productsArray = Array.isArray(resProducts.data)
@@ -159,7 +159,7 @@ const ProductPage = () => {
       let res;
       if (editingId) {
         res = await axios.put(
-          `http://127.0.0.1:5000/api/products/${editingId}`,
+          `https://calltic.onrender.com/api/products/${editingId}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -180,7 +180,7 @@ const ProductPage = () => {
         setSnackMessage("Product updated successfully!");
       } else {
         res = await axios.post(
-          "http://127.0.0.1:5000/api/products",
+          "https://calltic.onrender.com/api/products",
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -245,7 +245,7 @@ const ProductPage = () => {
   const handleDeleteConfirm = async () => {
     if (!token) return alert("No token provided");
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/products/${deleteId}`, {
+      await axios.delete(`https://calltic.onrender.com/api/products/${deleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(products.filter((p) => p._id !== deleteId));
@@ -404,7 +404,7 @@ const ProductPage = () => {
                 <Box sx={{ mt: 2, textAlign: "center" }}>
                   <Typography variant="body2">Current image:</Typography>
                   <Avatar
-                    src={`http://127.0.0.1:5000/uploads/${
+                    src={`https://calltic.onrender.com/uploads/${
                       products.find((p) => p._id === editingId)?.image
                     }`}
                     variant="rounded"
@@ -491,7 +491,7 @@ const ProductPage = () => {
                 }}
               >
                 <Avatar
-                  src={`http://127.0.0.1:5000/uploads/${p.image}`}
+                  src={`https://calltic.onrender.com/uploads/${p.image}`}
                   variant="rounded"
                   sx={{ width: "100%", height: 200, mb: 1 }}
                 />

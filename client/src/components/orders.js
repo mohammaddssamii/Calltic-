@@ -22,7 +22,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://127.0.0.1:5000/api/orders", {
+        const res = await axios.get("https://calltic.onrender.com/api/orders", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         const sortedOrders = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

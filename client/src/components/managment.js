@@ -16,7 +16,7 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => { 
     try { 
-      const res = await axios.get('http://127.0.0.1:5000/api/dashboard/stats', { 
+      const res = await axios.get('https://calltic.onrender.com/api/dashboard/stats', { 
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } 
       }); 
       setStats(res.data); 
@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const confirmRoleChange = async () => { 
     try { 
       await axios.put(
-        'http://127.0.0.1:5000/api/users/change-role',
+        'https://calltic.onrender.com/api/users/change-role',
         { userId: selectedUser._id, role: newRole },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       ); 

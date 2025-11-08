@@ -41,7 +41,7 @@ const RestaurantPage = () => {
   const fetchRestaurants = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://127.0.0.1:5000/api/restaurants");
+      const res = await axios.get("https://calltic.onrender.com/api/restaurants");
       setRestaurants(res.data);
       setLoading(false);
     } catch (err) {
@@ -83,13 +83,13 @@ const RestaurantPage = () => {
       if (image) formData.append("image", image);
 
       if (editingId) {
-        await axios.put(`http://127.0.0.1:5000/api/restaurants/${editingId}`, formData, {
+        await axios.put(`https://calltic.onrender.com/api/restaurants/${editingId}`, formData, {
           headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
         });
         setEditingId(null);
         showSnack("Restaurant updated successfully!");
       } else {
-        await axios.post("http://127.0.0.1:5000/api/restaurants", formData, {
+        await axios.post("https://calltic.onrender.com/api/restaurants", formData, {
           headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
         });
         showSnack("Restaurant added successfully!");
@@ -123,7 +123,7 @@ const RestaurantPage = () => {
     if (!token) return showSnack("No token provided", "error");
     try {
       setLoading(true);
-      await axios.delete(`http://127.0.0.1:5000/api/restaurants/${deleteDialog.id}`, {
+      await axios.delete(`https://calltic.onrender.com/api/restaurants/${deleteDialog.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchRestaurants();
@@ -148,7 +148,7 @@ const RestaurantPage = () => {
       headerName: "Image",
       flex: 0.5,
       renderCell: (params) =>
-        params.value ? <Avatar src={`http://127.0.0.1:5000/uploads/${params.value}`} variant="rounded" /> : "N/A",
+        params.value ? <Avatar src={`https://calltic.onrender.com/uploads/${params.value}`} variant="rounded" /> : "N/A",
     },
     {
       field: "actions",

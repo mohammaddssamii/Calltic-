@@ -57,7 +57,7 @@ export default function ProfilePage({ profileData }) {
     });
     setPreviewImage(
       profileData.profileImage
-        ? `http://127.0.0.1:5000/uploads/${profileData.profileImage}`
+        ? `https://calltic.onrender.com/uploads/${profileData.profileImage}`
         : '/default-avatar.png'
     );
   }, [profileData]);
@@ -78,7 +78,7 @@ export default function ProfilePage({ profileData }) {
     e.preventDefault();
     try {
       await axios.post(
-        'http://127.0.0.1:5000/api/users/change-password',
+        'https://calltic.onrender.com/api/users/change-password',
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -105,7 +105,7 @@ export default function ProfilePage({ profileData }) {
       formData.append('address', editData.address);
       if (profileImage) formData.append('profileImage', profileImage);
 
-      await axios.put('http://127.0.0.1:5000/api/users/update', formData, {
+      await axios.put('https://calltic.onrender.com/api/users/update', formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',

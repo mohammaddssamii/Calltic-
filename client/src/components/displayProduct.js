@@ -121,7 +121,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:5000/api/restaurants");
+        const res = await axios.get("https://calltic.onrender.com/api/restaurants");
         setRestaurants(res.data);
       } catch (err) {
         console.error("Error fetching restaurants:", err);
@@ -133,7 +133,7 @@ useEffect(() => {
   const fetchProducts = async (restaurantId) => {
     try {
       const res = await axios.get(
-        `http://127.0.0.1:5000/api/products/restaurant/${restaurantId}`
+        `https://calltic.onrender.com/api/products/restaurant/${restaurantId}`
       );
       const grouped = {};
       res.data.forEach((product) => {
@@ -152,7 +152,7 @@ useEffect(() => {
 
  const fetchCart = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:5000/api/cart", {
+    const res = await axios.get("https://calltic.onrender.com/api/cart", {
       headers: { Authorization: `Bearer ${token}` },
     });
     setCart(res.data.items || []);
@@ -169,7 +169,7 @@ useEffect(() => {
  const addToCart = async (product) => {
   try {
     // 1️⃣ جلب السلة الحالية من backend قبل أي إضافة
-    const res = await axios.get("http://127.0.0.1:5000/api/cart", {
+    const res = await axios.get("https://calltic.onrender.com/api/cart", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const currentItems = res.data.items || [];
@@ -189,7 +189,7 @@ useEffect(() => {
 
     // 3️⃣ إضافة المنتج
     await axios.post(
-      "http://127.0.0.1:5000/api/cart",
+      "https://calltic.onrender.com/api/cart",
       { productId: product._id, quantity: 1 },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -218,7 +218,7 @@ useEffect(() => {
     }
     try {
       await axios.put(
-        `http://127.0.0.1:5000/api/cart/${productId}`,
+        `https://calltic.onrender.com/api/cart/${productId}`,
         { quantity: newQty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -230,7 +230,7 @@ useEffect(() => {
 
   const removeFromCart = async (productId) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/cart/${productId}`, {
+      await axios.delete(`https://calltic.onrender.com/api/cart/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSnackMessage("Item removed from cart!");
@@ -248,7 +248,7 @@ useEffect(() => {
   };
   const clearCart = async () => {
   try {
-    await axios.delete("http://127.0.0.1:5000/api/cart", {
+    await axios.delete("https://calltic.onrender.com/api/cart", {
       headers: { Authorization: `Bearer ${token}` },
     });
     setSnackMessage("🗑️ Cart cleared successfully!");
@@ -266,7 +266,7 @@ useEffect(() => {
 const toggleAvailability = async (productId) => {
   try {
     await axios.patch(
-      `http://127.0.0.1:5000/api/products/${productId}/toggle`,
+      `https://calltic.onrender.com/api/products/${productId}/toggle`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -283,7 +283,7 @@ const toggleAvailability = async (productId) => {
 const toggleCategoryAvailability = async (categoryId) => {
   try {
     const res = await axios.patch(
-      `http://127.0.0.1:5000/api/categories/${categoryId}/toggle-with-products`,
+      `https://calltic.onrender.com/api/categories/${categoryId}/toggle-with-products`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -310,7 +310,7 @@ const toggleCategoryAvailability = async (categoryId) => {
 const handleToggleCategory = async (categoryId, categoryName) => {
   try {
     const res = await axios.patch(
-      `http://127.0.0.1:5000/api/categories/${categoryId}/toggle-with-products`,
+      `https://calltic.onrender.com/api/categories/${categoryId}/toggle-with-products`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -389,7 +389,7 @@ const handleToggleCategory = async (categoryId, categoryName) => {
                 <CardMedia
                   component="img"
                   height="200"
-                  image={`http://127.0.0.1:5000/uploads/${rest.image}`}
+                  image={`https://calltic.onrender.com/uploads/${rest.image}`}
                   alt={rest.name}
                   sx={{ objectFit: "cover" }}
                 />
@@ -498,7 +498,7 @@ const handleToggleCategory = async (categoryId, categoryName) => {
                         <CardMedia
                           component="img"
                           height="200"
-                          image={`http://127.0.0.1:5000/uploads/${product.image}`}
+                          image={`https://calltic.onrender.com/uploads/${product.image}`}
                           alt={product.name}
                           sx={{ objectFit: "cover" }}
                         />
@@ -632,7 +632,7 @@ const handleToggleCategory = async (categoryId, categoryName) => {
         );
 
         axios.put(
-          `http://127.0.0.1:5000/api/cart/${item.product._id}/note`,
+          `https://calltic.onrender.com/api/cart/${item.product._id}/note`,
           { note: newNote },
           { headers: { Authorization: `Bearer ${token}` } }
         ).catch((err) => console.error("Error saving note:", err));

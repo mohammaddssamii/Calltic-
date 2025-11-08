@@ -135,7 +135,7 @@ export default function Cart() {
   const fetchCart = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("http://127.0.0.1:5000/api/cart", {
+      const res = await axios.get("https://calltic.onrender.com/api/cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Expecting res.data.items = [{ product: {...}, quantity }]
@@ -184,7 +184,7 @@ export default function Cart() {
     try {
       setLoading(true);
       await axios.put(
-        `http://127.0.0.1:5000/api/cart/${productId}`,
+        `https://calltic.onrender.com/api/cart/${productId}`,
         { quantity: newQuantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -209,7 +209,7 @@ export default function Cart() {
     }
     try {
       setLoading(true);
-      await axios.delete(`http://127.0.0.1:5000/api/cart/${productId}`, {
+      await axios.delete(`https://calltic.onrender.com/api/cart/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCartItems((prev) => prev.filter((it) => it.product._id !== productId));
@@ -292,7 +292,7 @@ export default function Cart() {
 
     try {
       setLoading(true);
-      await axios.post("http://127.0.0.1:5000/api/orders", payload, {
+      await axios.post("https://calltic.onrender.com/api/orders", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // clear cart UI
@@ -347,7 +347,7 @@ export default function Cart() {
                     <ProductCard>
                       <CardMedia
                         component="img"
-                        image={`http://127.0.0.1:5000/uploads/${it.product.image}`}
+                        image={`https://calltic.onrender.com/uploads/${it.product.image}`}
                         alt={it.product.name}
                         sx={{ width: 120, height: 90, borderRadius: 1, objectFit: "cover" }}
                       />
@@ -381,7 +381,7 @@ export default function Cart() {
           onBlur={async () => {
             try {
               await axios.put(
-                `http://127.0.0.1:5000/api/cart/${it.product._id}/note`,
+                `https://calltic.onrender.com/api/cart/${it.product._id}/note`,
                 { note: it.note || "" },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
@@ -760,7 +760,7 @@ export default function Cart() {
       onClick={async () => {
         try {
           setLoading(true);
-          await axios.delete("http://127.0.0.1:5000/api/cart", {
+          await axios.delete("https://calltic.onrender.com/api/cart", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setCartItems([]);

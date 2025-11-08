@@ -40,7 +40,7 @@ export function Category() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://127.0.0.1:5000/api/categories");
+      const res = await axios.get("https://calltic.onrender.com/api/categories");
       setCategories(res.data);
     } catch (err) {
       console.error(err);
@@ -57,7 +57,7 @@ export function Category() {
     try {
       if (editingCategory) {
         const res = await axios.put(
-          `http://127.0.0.1:5000/api/categories/${editingCategory}`,
+          `https://calltic.onrender.com/api/categories/${editingCategory}`,
           { name },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -65,7 +65,7 @@ export function Category() {
         showSnack("Category updated successfully!");
       } else {
         const res = await axios.post(
-          "http://127.0.0.1:5000/api/categories",
+          "https://calltic.onrender.com/api/categories",
           { name },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -95,7 +95,7 @@ export function Category() {
     const id = deleteDialog.categoryId;
     setLoading(true);
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/categories/${id}`, {
+      await axios.delete(`https://calltic.onrender.com/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCategories(categories.filter((c) => c._id !== id));
@@ -197,7 +197,7 @@ export function Category() {
   onClick={async () => {
     try {
       const res = await axios.patch(
-        `http://127.0.0.1:5000/api/categories/${category._id}/toggle-with-products`,
+        `https://calltic.onrender.com/api/categories/${category._id}/toggle-with-products`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
